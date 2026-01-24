@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distance Means Nothing ❤️</title>
+    <title>Valentine's Dual Agenda ❤️</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
@@ -18,14 +18,21 @@
             --text: #ffffff;
             --accent: #ff8ca6;
             --empty: #1a1a1a;
+            --bg-gradient: radial-gradient(circle at 10% 10%, rgba(255, 46, 99, 0.12) 0%, transparent 40%),
+                            radial-gradient(circle at 90% 90%, rgba(255, 46, 99, 0.12) 0%, transparent 40%);
+        }
+
+        body.naughty-mode {
+            --primary: #b026ff;
+            --accent: #e0aaff;
+            --bg-gradient: radial-gradient(circle at 10% 10%, rgba(176, 38, 255, 0.15) 0%, transparent 40%),
+                            radial-gradient(circle at 90% 90%, rgba(176, 38, 255, 0.15) 0%, transparent 40%);
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg);
-            background-image: 
-                radial-gradient(circle at 10% 10%, rgba(255, 46, 99, 0.08) 0%, transparent 30%),
-                radial-gradient(circle at 90% 90%, rgba(255, 46, 99, 0.08) 0%, transparent 30%);
+            background-image: var(--bg-gradient);
             color: var(--text);
             margin: 0;
             display: flex;
@@ -33,6 +40,7 @@
             align-items: flex-start;
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background-image 0.8s ease;
         }
 
         #app {
@@ -74,6 +82,32 @@
             50% { transform: scale(1.1); filter: drop-shadow(0 0 25px var(--primary)); }
         }
 
+        /* Toggle Styles */
+        .mode-toggle {
+            display: flex;
+            background: rgba(255,255,255,0.05);
+            padding: 4px;
+            border-radius: 100px;
+            margin: 20px auto;
+            width: fit-content;
+            border: 1px solid var(--glass-border);
+        }
+
+        .toggle-btn {
+            padding: 8px 24px;
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
         input, textarea {
             background: rgba(255, 255, 255, 0.07);
             border: 1px solid var(--glass-border);
@@ -100,52 +134,47 @@
             box-shadow: 0 4px 15px rgba(255, 46, 99, 0.3);
         }
 
-        /* Updated Video Frame Container */
-        #video-screen .video-container {
+        .video-container {
             width: 100%;
             max-width: 400px;
             aspect-ratio: 16/9;
             border-radius: 20px;
             overflow: hidden;
             border: 1px solid var(--glass-border);
-            box-shadow: 0 0 30px rgba(255, 46, 99, 0.2);
             background: #000;
             position: relative;
         }
 
-        #video-screen iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        iframe { width: 100%; height: 100%; border: none; }
 
-        .video-fallback {
-            margin-top: 15px;
-            font-size: 0.8rem;
-            color: var(--accent);
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .modal-card { width: 90%; max-width: 400px; padding: 30px; border: 1px solid var(--primary); }
-        .modal-body { color: #ddd; line-height: 1.6; margin: 20px 0; max-height: 40vh; overflow-y: auto; white-space: pre-wrap; }
-
-        .visualizer-container { position: relative; width: 260px; height: 220px; margin: 0 auto 30px; }
+        .visualizer-container { position: relative; width: 220px; height: 180px; margin: 0 auto 30px; }
         .heart-svg { width: 100%; height: 100%; }
         .heart-segment { fill: var(--empty); transition: fill 0.8s ease; }
         .heart-segment.filled { fill: var(--primary); }
 
         .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px; }
-        .task-trigger { padding: 16px; text-align: left; cursor: pointer; }
-        .task-trigger.locked { opacity: 0.2; cursor: not-allowed; }
-        .task-trigger.completed { border-color: rgba(255, 46, 99, 0.3); background: rgba(255, 46, 99, 0.05); }
+        .task-trigger { padding: 16px; text-align: left; cursor: pointer; position: relative; overflow: hidden; transition: all 0.4s ease; border: 1px solid var(--glass-border); border-radius: 18px;}
+        .task-trigger.locked { 
+            opacity: 0.3; 
+            filter: blur(8px) grayscale(1);
+            pointer-events: none;
+        }
+        .task-trigger.completed { border-color: var(--primary); background: rgba(255, 46, 99, 0.05); }
         .task-trigger span { display: block; font-size: 0.65rem; color: var(--accent); font-weight: 700; text-transform: uppercase; }
-        .task-trigger strong { display: block; font-size: 0.85rem; }
+        .task-trigger strong { display: block; font-size: 0.85rem; margin-top: 4px; }
 
-        .detail-view { padding: 24px; margin-top: 20px; }
+        .detail-view { padding: 24px; margin-top: 20px; text-align: left; }
         .clue-box { background: rgba(255, 46, 99, 0.1); border: 1px dashed var(--primary); padding: 16px; border-radius: 16px; margin-top: 20px; color: var(--accent); }
 
-        #manager-panel { background: #111; padding: 20px; border-radius: 20px; text-align: left; margin-top: 40px; }
+        #manager-panel { background: #111; padding: 20px; border-radius: 20px; text-align: left; margin-top: 40px; border: 1px solid #333; }
+        
+        .secret-trigger {
+            display: inline-block;
+            cursor: default;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         .hidden { display: none !important; }
         .loading-ring { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -154,14 +183,14 @@
 <body>
 
     <div id="app">
-        <!-- 0. Loading State -->
+        <!-- Loading -->
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
             <div class="loading-ring"></div>
-            <p id="loading-text">Syncing Love...</p>
+            <p id="loading-text">Syncing Connection...</p>
         </div>
 
-        <!-- 1. Login Screen -->
+        <!-- Login -->
         <div id="login-screen" class="overlay-screen hidden">
             <div class="heart-icon">❤️</div>
             <h1 style="font-size: 1.5rem">The Distance Vault</h1>
@@ -170,29 +199,36 @@
             <button id="login-btn">Unlock</button>
         </div>
 
-        <!-- 2. Video Stage -->
+        <!-- Video -->
         <div id="video-screen" class="overlay-screen hidden">
             <h2 style="margin-bottom: 20px; font-size: 1.2rem;">A Message For You</h2>
             <div class="video-container">
-                <iframe id="intro-video-frame" src="" allow="autoplay; fullscreen" allowfullscreen></iframe>
+                <iframe id="intro-video-frame" src="" allow="fullscreen" allowfullscreen></iframe>
             </div>
-            <a href="https://drive.google.com/file/d/1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF/view?usp=sharing" target="_blank" class="video-fallback">Video not loading? Click here to watch it in Drive.</a>
-            <button onclick="skipVideo()" style="margin-top: 25px; background: transparent; border: 1px solid var(--glass-border);">Continue to Agenda</button>
+            <p style="font-size: 0.7rem; opacity: 0.6; margin-top: 10px;">(Click play above to watch)</p>
+            <button onclick="skipVideo()" style="margin-top: 25px; background: transparent; border: 1px solid var(--glass-border);">Go to Agenda</button>
         </div>
 
-        <!-- 3. Welcome Modal -->
+        <!-- Welcome -->
         <div id="welcome-modal" class="overlay-screen hidden">
             <div class="modal-card glass">
-                <h2 style="color: var(--primary); margin: 0;">For You, My Love</h2>
+                <h2 id="welcome-title" style="color: var(--primary); margin: 0;">For You, My Love</h2>
                 <div id="welcome-text-display" class="modal-body"></div>
                 <button onclick="closeModal()">Start Our Day</button>
             </div>
         </div>
 
-        <!-- 4. Main Dashboard -->
+        <!-- Main -->
         <div id="main-content" class="hidden">
-            <h1>Hi Beautiful ❤️</h1>
-            <p style="color: #888; margin-bottom: 30px;">Every step brings us closer.</p>
+            <h1 id="main-title">
+                Distance Means Nothing 
+                <span class="secret-trigger" id="secret-toggle">❤️</span>
+            </h1>
+            
+            <div class="mode-toggle">
+                <div id="toggle-romance" class="toggle-btn active" onclick="switchMode('romance')">Romance</div>
+                <div id="toggle-naughty" class="toggle-btn" onclick="switchMode('naughty')">Naughtymance</div>
+            </div>
 
             <div class="visualizer-container">
                 <svg viewBox="0 0 32 29.6" class="heart-svg">
@@ -211,45 +247,59 @@
                 <div id="detail-content"></div>
             </div>
 
-            <!-- Manager Section -->
+            <!-- Manager Section (Secretly Hidden) -->
             <div id="manager-panel" class="hidden">
-                <h3 style="margin:0 0 10px 0">Settings</h3>
+                <h3 style="margin:0 0 10px 0">Admin Settings</h3>
                 <label>Correct Year:</label><br>
                 <input type="number" id="edit-year" style="max-width:100%"><br>
                 <label>Welcome Message:</label><br>
                 <textarea id="edit-welcome" rows="5" style="max-width:100%"></textarea>
                 <button id="save-config-btn" style="width:100%">Save Config</button>
                 <hr style="border:0; border-top:1px solid #333; margin:20px 0">
-                <p style="font-size:0.7rem; color: #888">Current User ID: <span id="user-uid"></span></p>
-                <button onclick="resetAllProgress()" style="background:#444; width:100%; font-size:0.8rem">Reset Progress</button>
+                <button onclick="resetAllProgress()" style="background:#444; width:100%; font-size:0.8rem">Reset Everything</button>
+                <p style="font-size: 0.6rem; color: #666; text-align: center; margin-top: 10px;">Tap heart 5 times again to hide</p>
             </div>
-            
-            <p onclick="document.getElementById('manager-panel').classList.toggle('hidden')" style="opacity: 0.2; font-size: 0.7rem; margin-top: 40px; cursor: pointer;">Settings</p>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyAf3nUe7taCcOLOzc2Rf4taBsMfI2-sFG0",
             authDomain: "valentines-16b75.firebaseapp.com",
             projectId: "valentines-16b75",
             storageBucket: "valentines-16b75.firebasestorage.app",
             messagingSenderId: "874081783784",
-            appId: "1:874081783784:web:366560e5c9010996e9de5d",
-            measurementId: "G-JKK5Q1GY4X"
+            appId: "1:874081783784:web:366560e5c9010996e9de5d"
         };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'valentines-remote-live';
 
         let app, auth, db;
-        const appId = 'valentines-remote-live';
+        let config = { passcode: "2017", welcomeMessage: "Distance is just a test. I have two paths for you today: The Romantic Journey and the Naughty Adventure. Complete one to unlock the next, or dance between both." };
+        
+        let currentMode = 'romance';
+        let boards = {
+            romance: [
+                { time: "08:00 AM", title: "Morning Poetry", desc: "Write down the first three things that came to your mind when you woke up and realized it was our Valentine's Day. Voice note it to me.", clue: "Check the bathroom mirror for a hidden post-it.", completed: false },
+                { time: "11:00 AM", title: "Memory Mosaic", desc: "Find the oldest photo we have together and tell me the one detail you remember from that day that I've probably forgotten.", clue: "Look under your favorite coffee mug.", completed: false },
+                { time: "02:00 PM", title: "Virtual Bouquet", desc: "I've sent something to your door/phone. Take a moment to enjoy the scent or the sight of it.", clue: "Check your email/messages for a delivery confirmation.", completed: false },
+                { time: "07:00 PM", title: "Sunset Toast", desc: "Pour a glass of whatever you love most. We'll have a 10-minute quiet call just to look at each other.", clue: "The real night begins soon.", completed: false }
+            ],
+            naughty: [
+                { time: "10:00 AM", title: "The Mirror Tease", desc: "Start the day by sending me a mirror selfie... showing just a little bit of what you're wearing (or not wearing) for me later.", clue: "Go check the pocket of your favorite jacket.", completed: false },
+                { time: "01:00 PM", title: "Blind Obedience", desc: "Record a spicy audio note while blindfolded. Describe one thing you want me to do to you tonight.", clue: "Check the drawer where you keep your 'secrets'.", completed: false },
+                { time: "04:00 PM", title: "Wardrobe Check", desc: "Try on that one piece of lingerie you know drives me crazy. Send a teaser video (no faces) so I can 'approve' it.", clue: "Your surprise is hidden where you get ready.", completed: false },
+                { time: "09:00 PM", title: "Instructional Play", desc: "Midnight unlocked. Lights down, camera on, and strictly following my voice. No touching until I say.", clue: "I am yours entirely.", completed: false }
+            ]
+        };
 
-        let config = { passcode: "2017", welcomeMessage: "Welcome message here..." };
-        let agenda = [];
         let activeIndex = -1;
         let user = null;
+        let secretClicks = 0;
+        let lastSecretClickTime = 0;
 
         async function initFirebase() {
             try {
@@ -257,53 +307,51 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+
                 onAuthStateChanged(auth, (u) => {
                     if (u) {
                         user = u;
-                        document.getElementById('user-uid').innerText = u.uid;
                         startSync();
                     }
                 });
 
-                await signInAnonymously(auth);
+                await initAuth();
             } catch (err) {
                 console.error("Auth failed", err);
-                const loadingText = document.getElementById('loading-text');
-                if (err.code === 'auth/configuration-not-found') {
-                    loadingText.innerHTML = "Firebase Auth Error: Ensure 'Anonymous' sign-in is enabled.";
-                } else {
-                    loadingText.innerHTML = "Connection Error: " + err.message;
-                }
             }
         }
 
         function startSync() {
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
-            
             onSnapshot(docRef, (snap) => {
                 if (snap.exists()) {
                     const data = snap.data();
                     config = data.config || config;
-                    agenda = data.agenda || [
-                        { time: "09:00 AM", title: "Morning Kisses", desc: "吹个亲亲在镜子里。", clue: "礼物在门口。", completed: false },
-                        { time: "09:00 PM", title: "Midnight Date", desc: "开视频见面。", clue: "我有惊喜给你。", completed: false }
-                    ];
+                    boards = data.boards || boards;
                     renderApp();
+                    
+                    // Sync local inputs in manager
+                    document.getElementById('edit-year').value = config.passcode;
+                    document.getElementById('edit-welcome').value = config.welcomeMessage;
                 } else {
                     saveAllData();
                 }
                 document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
-            }, (err) => {
-                console.error("Firestore sync error:", err);
-                document.getElementById('loading-text').innerText = "Database Error.";
-            });
+            }, (err) => console.error(err));
         }
 
         async function saveAllData() {
             if (!user) return;
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
-            await setDoc(docRef, { config, agenda });
+            await setDoc(docRef, { config, boards });
         }
 
         window.checkPasscode = () => {
@@ -311,13 +359,9 @@
             if (val === config.passcode.toString()) {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('video-screen').classList.remove('hidden');
-                
-                // Using the official preview URL. 
-                // IMPORTANT: Ensure Drive file sharing is "Anyone with the link can view"
-                const videoFrame = document.getElementById('intro-video-frame');
-                videoFrame.src = "https://drive.google.com/file/d/1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF/preview";
+                document.getElementById('intro-video-frame').src = "https://drive.google.com/file/d/1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF/preview";
             } else {
-                alert("That's not the year, my love.");
+                alert("Incorrect Year.");
             }
         };
 
@@ -325,9 +369,6 @@
             document.getElementById('video-screen').classList.add('hidden');
             document.getElementById('welcome-modal').classList.remove('hidden');
             document.getElementById('welcome-text-display').innerText = config.welcomeMessage;
-            
-            // Clear iframe src to stop playback
-            document.getElementById('intro-video-frame').src = "";
         };
 
         window.closeModal = () => {
@@ -335,14 +376,24 @@
             document.getElementById('main-content').classList.remove('hidden');
         };
 
+        window.switchMode = (mode) => {
+            currentMode = mode;
+            activeIndex = -1;
+            document.getElementById('task-detail').classList.add('hidden');
+            document.body.className = mode === 'naughty' ? 'naughty-mode' : '';
+            document.getElementById('toggle-romance').classList.toggle('active', mode === 'romance');
+            document.getElementById('toggle-naughty').classList.toggle('active', mode === 'naughty');
+            renderApp();
+        };
+
         function renderApp() {
+            const currentAgenda = boards[currentMode];
             const container = document.getElementById('heart-dynamic-segments');
             container.innerHTML = '';
-            const widthPer = 32 / (agenda.length || 1);
+            const widthPer = 32 / (currentAgenda.length || 1);
 
-            agenda.forEach((item, i) => {
+            currentAgenda.forEach((item, i) => {
                 const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                rect.setAttribute("id", `seg-${i}`);
                 rect.setAttribute("x", i * widthPer);
                 rect.setAttribute("y", "0");
                 rect.setAttribute("width", widthPer + 0.1);
@@ -353,30 +404,28 @@
 
             const grid = document.getElementById('interaction-grid');
             grid.innerHTML = '';
-            agenda.forEach((item, i) => {
-                const isLocked = i > 0 && !agenda[i - 1].completed;
+            currentAgenda.forEach((item, i) => {
+                const isLocked = i > 0 && !currentAgenda[i - 1].completed;
                 const btn = document.createElement('div');
-                btn.className = `task-trigger glass ${isLocked ? 'locked' : ''} ${item.completed ? 'completed' : ''} ${activeIndex === i ? 'active-now' : ''}`;
+                btn.className = `task-trigger glass ${isLocked ? 'locked' : ''} ${item.completed ? 'completed' : ''}`;
                 btn.innerHTML = `<span>${item.time}</span><strong>${item.title}</strong>`;
                 btn.onclick = () => { if (!isLocked) showTask(i); };
                 grid.appendChild(btn);
             });
-
-            if (activeIndex !== -1) showTask(activeIndex);
         }
 
         function showTask(index) {
             activeIndex = index;
-            const item = agenda[index];
+            const item = boards[currentMode][index];
             const detail = document.getElementById('task-detail');
             detail.classList.remove('hidden');
             
             document.getElementById('detail-content').innerHTML = `
                 <span style="color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">${item.time}</span>
                 <h2 style="margin: 10px 0;">${item.title}</h2>
-                <p style="color: #bbb; line-height: 1.6; font-size: 0.95rem;">${item.desc}</p>
-                ${!item.completed ? `<button id="complete-btn">I've Done This</button>` : 
-                `<div class="clue-box"><strong>REWARD:</strong><br>${item.clue}</div>`}
+                <p style="color: #bbb; line-height: 1.6;">${item.desc}</p>
+                ${!item.completed ? `<button id="complete-btn" style="margin-top: 20px;">I've Done This ❤️</button>` : 
+                `<div class="clue-box"><strong>UNLOCKED CLUE:</strong><br>${item.clue}</div>`}
             `;
             
             const cBtn = document.getElementById('complete-btn');
@@ -385,29 +434,45 @@
 
         window.completeCurrent = async () => {
             if (activeIndex === -1) return;
-            agenda[activeIndex].completed = true;
+            boards[currentMode][activeIndex].completed = true;
             await saveAllData();
-        };
-
-        window.saveSettings = async () => {
-            config.passcode = document.getElementById('edit-year').value;
-            config.welcomeMessage = document.getElementById('edit-welcome').value;
-            await saveAllData();
-            alert("Settings saved in cloud!");
         };
 
         window.resetAllProgress = async () => {
-            if(confirm("Reset progress for both of you?")) {
-                agenda.forEach(a => a.completed = false);
+            if(confirm("Reset everything?")) {
+                Object.values(boards).forEach(b => b.forEach(a => a.completed = false));
                 await saveAllData();
                 activeIndex = -1;
                 document.getElementById('task-detail').classList.add('hidden');
             }
         };
 
-        document.getElementById('login-btn').onclick = window.checkPasscode;
-        document.getElementById('save-config-btn').onclick = window.saveSettings;
+        // Secret Trigger Logic
+        document.getElementById('secret-toggle').onclick = () => {
+            const now = Date.now();
+            if (now - lastSecretClickTime > 1500) secretClicks = 0;
+            
+            secretClicks++;
+            lastSecretClickTime = now;
+            
+            if (secretClicks >= 5) {
+                const panel = document.getElementById('manager-panel');
+                panel.classList.toggle('hidden');
+                secretClicks = 0;
+                if (!panel.classList.contains('hidden')) {
+                    panel.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        };
 
+        document.getElementById('save-config-btn').onclick = async () => {
+            config.passcode = document.getElementById('edit-year').value;
+            config.welcomeMessage = document.getElementById('edit-welcome').value;
+            await saveAllData();
+            alert("Configuration saved.");
+        };
+
+        document.getElementById('login-btn').onclick = window.checkPasscode;
         initFirebase();
     </script>
 </body>
