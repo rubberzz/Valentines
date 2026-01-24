@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Valentine's Dual Agenda ❤️</title>
+    <title>My Queen's Valentine's ❤️</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
@@ -62,7 +62,8 @@
         .overlay-screen {
             position: fixed;
             inset: 0;
-            background: var(--bg);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -119,13 +120,13 @@
             background: rgba(255, 255, 255, 0.07);
             border: 1px solid var(--glass-border);
             color: white;
-            padding: 16px;
-            border-radius: 16px;
-            font-size: 16px;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
             width: 100%;
             box-sizing: border-box;
             outline: none;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             font-family: inherit;
         }
 
@@ -217,31 +218,48 @@
             font-size: 0.9rem;
         }
 
-        #manager-panel { 
-            background: #111; 
-            padding: 20px; 
-            border-radius: 20px; 
-            text-align: left; 
-            margin: 40px 0 20px; 
-            border: 1px solid #333; 
+        /* Centered Admin Modal Styling */
+        #admin-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(12px);
+            z-index: 3000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .admin-card {
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
         .admin-section {
             margin-bottom: 25px;
-            padding-bottom: 15px;
+            padding-bottom: 20px;
             border-bottom: 1px solid #222;
         }
 
         .admin-section h4 {
-            margin: 0 0 12px 0;
+            margin: 0 0 14px 0;
             font-size: 0.9rem;
             color: var(--accent);
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .secret-trigger {
             display: inline-block;
-            cursor: default;
+            cursor: pointer;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             padding: 0 5px;
@@ -255,11 +273,6 @@
             width: 100%;
             max-width: 320px;
             padding: 30px 20px;
-        }
-        #welcome-text-display {
-            margin: 20px 0;
-            line-height: 1.6;
-            font-size: 0.95rem;
         }
     </style>
 </head>
@@ -296,7 +309,7 @@
         <div id="welcome-modal" class="overlay-screen hidden">
             <div class="modal-card glass">
                 <h2 id="welcome-title" style="color: var(--primary); margin: 0; font-size: 1.3rem;">For You, My Love</h2>
-                <div id="welcome-text-display" class="modal-body"></div>
+                <div id="welcome-text-display" style="margin: 20px 0; line-height: 1.6; font-size: 0.95rem;"></div>
                 <button onclick="closeModal()">Start Our Day</button>
             </div>
         </div>
@@ -330,47 +343,47 @@
                 <div id="detail-content"></div>
             </div>
 
-            <!-- Manager Section (Secretly Hidden) -->
-            <div id="manager-panel" class="hidden">
-                <h3 style="margin:0 0 20px 0; font-size: 1.1rem; border-bottom: 2px solid var(--primary); display: inline-block;">Admin Settings</h3>
-                
-                <div class="admin-section">
-                    <h4>Global Config</h4>
-                    <label style="font-size: 0.8rem; opacity: 0.7;">Correct Year (Passcode):</label>
-                    <input type="number" id="edit-year" inputmode="numeric">
-                    <label style="font-size: 0.8rem; opacity: 0.7;">Welcome Text:</label>
-                    <textarea id="edit-welcome" rows="3"></textarea>
-                    <button id="save-config-btn" style="width:100%; max-width: 100%;">Save Global Config</button>
-                </div>
+            <!-- BETTER CENTERED ADMIN MODAL -->
+            <div id="admin-modal" class="hidden">
+                <div class="admin-card">
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin:0; font-size: 1.1rem; color: var(--primary);">Admin Settings</h3>
+                        <span onclick="toggleAdmin(false)" style="cursor:pointer; font-size: 1.5rem;">&times;</span>
+                    </div>
+                    
+                    <div class="admin-section">
+                        <h4>Global Config</h4>
+                        <input type="number" id="edit-year" placeholder="Passcode Year" inputmode="numeric">
+                        <textarea id="edit-welcome" placeholder="Welcome Message" rows="2"></textarea>
+                        <button id="save-config-btn" style="width:100%; max-width: 100%; padding: 12px; font-size: 0.85rem;">Update Global Info</button>
+                    </div>
 
-                <div class="admin-section">
-                    <h4>Add New Task</h4>
-                    <select id="new-task-mode">
-                        <option value="romance">Add to Romance</option>
-                        <option value="naughty">Add to Naughty</option>
-                    </select>
-                    <input type="text" id="new-task-time" placeholder="Time (e.g. 10:00 AM)">
-                    <input type="text" id="new-task-title" placeholder="Task Title">
-                    <textarea id="new-task-desc" placeholder="Task Description" rows="2"></textarea>
-                    <input type="text" id="new-task-clue" placeholder="Unlockable Clue">
-                    <button id="add-task-btn" style="width:100%; max-width: 100%; background: #2ecc71;">Add Task</button>
-                </div>
+                    <div class="admin-section">
+                        <h4>Task Manager</h4>
+                        <select id="new-task-mode">
+                            <option value="romance">Section: Romance</option>
+                            <option value="naughty">Section: Naughty</option>
+                        </select>
+                        <input type="text" id="new-task-time" placeholder="Time (e.g. 10:00 AM)">
+                        <input type="text" id="new-task-title" placeholder="Task Title">
+                        <textarea id="new-task-desc" placeholder="Instructions..." rows="2"></textarea>
+                        <input type="text" id="new-task-clue" placeholder="Unlockable Clue">
+                        <button id="add-task-btn" style="width:100%; max-width: 100%; background: #2ecc71; padding: 12px; font-size: 0.85rem;">+ Add Task</button>
+                    </div>
 
-                <div class="admin-section">
-                    <h4>Delete Tasks</h4>
-                    <select id="delete-mode-selector" onchange="updateDeleteList()">
-                        <option value="romance">Romance Section</option>
-                        <option value="naughty">Naughty Section</option>
-                    </select>
-                    <select id="delete-task-selector">
-                        <!-- Populated via JS -->
-                    </select>
-                    <button id="delete-task-btn" style="width:100%; max-width: 100%; background: #c0392b;">Delete Selected Task</button>
-                </div>
+                    <div class="admin-section">
+                        <h4>Delete Task</h4>
+                        <select id="delete-mode-selector" onchange="updateDeleteList()">
+                            <option value="romance">From Romance</option>
+                            <option value="naughty">From Naughty</option>
+                        </select>
+                        <select id="delete-task-selector">
+                            <option value="">Select task to remove...</option>
+                        </select>
+                        <button id="delete-task-btn" style="width:100%; max-width: 100%; background: #c0392b; padding: 12px; font-size: 0.85rem;">Delete Selected</button>
+                    </div>
 
-                <div style="margin-top: 20px;">
-                    <button onclick="resetAllProgress()" style="background:#444; width:100%; font-size:0.8rem; max-width: 100%;">Reset All Progress (Uncheck boxes)</button>
-                    <p style="font-size: 0.6rem; color: #666; text-align: center; margin-top: 15px;">Tap heart 5 times again to hide panel</p>
+                    <button onclick="resetAllProgress()" style="background:#444; width:100%; font-size:0.8rem; max-width: 100%; padding: 10px;">Reset All Checkboxes</button>
                 </div>
             </div>
         </div>
@@ -395,21 +408,7 @@
         let config = { passcode: "2017", welcomeMessage: "Distance is just a test. I have two paths for you today." };
         
         let currentMode = 'romance';
-        let boards = {
-            romance: [],
-            naughty: []
-        };
-
-        // Fallback default tasks if DB is empty
-        const defaultBoards = {
-            romance: [
-                { time: "08:00 AM", title: "Morning Poetry", desc: "Write down the first three things that came to your mind.", clue: "Check the bathroom mirror.", completed: false },
-                { time: "11:00 AM", title: "Memory Mosaic", desc: "Find the oldest photo we have together.", clue: "Look under your favorite coffee mug.", completed: false }
-            ],
-            naughty: [
-                { time: "10:00 AM", title: "The Mirror Tease", desc: "Send me a mirror selfie showing a little teaser.", clue: "Check the pocket of your favorite jacket.", completed: false }
-            ]
-        };
+        let boards = { romance: [], naughty: [] };
 
         let activeIndex = -1;
         let user = null;
@@ -438,9 +437,7 @@
                 });
 
                 await initAuth();
-            } catch (err) {
-                console.error("Auth failed", err);
-            }
+            } catch (err) { console.error("Auth failed", err); }
         }
 
         function startSync() {
@@ -456,8 +453,7 @@
                     document.getElementById('edit-year').value = config.passcode;
                     document.getElementById('edit-welcome').value = config.welcomeMessage;
                 } else {
-                    boards = defaultBoards;
-                    saveAllData();
+                    saveAllData(); // Initialize first time
                 }
                 document.getElementById('loading-screen').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
@@ -476,9 +472,7 @@
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('video-screen').classList.remove('hidden');
                 document.getElementById('intro-video-frame').src = "https://drive.google.com/file/d/1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF/preview";
-            } else {
-                alert("Incorrect Year.");
-            }
+            } else { alert("Incorrect Year."); }
         };
 
         window.skipVideo = () => {
@@ -559,18 +553,22 @@
 
         window.resetAllProgress = async () => {
             if(confirm("Uncheck all completed tasks?")) {
-                Object.values(boards).forEach(b => b.forEach(a => a.completed = false));
+                Object.keys(boards).forEach(k => boards[k].forEach(a => a.completed = false));
                 await saveAllData();
                 activeIndex = -1;
                 document.getElementById('task-detail').classList.add('hidden');
             }
         };
 
-        // ADMIN TASK LOGIC
+        window.toggleAdmin = (show) => {
+            document.getElementById('admin-modal').classList.toggle('hidden', !show);
+            if (show) updateDeleteList();
+        };
+
         window.updateDeleteList = () => {
             const mode = document.getElementById('delete-mode-selector').value;
             const selector = document.getElementById('delete-task-selector');
-            selector.innerHTML = '';
+            selector.innerHTML = '<option value="">Select task...</option>';
             (boards[mode] || []).forEach((task, i) => {
                 const opt = document.createElement('option');
                 opt.value = i;
@@ -584,31 +582,24 @@
             const newTask = {
                 time: document.getElementById('new-task-time').value || "Noon",
                 title: document.getElementById('new-task-title').value || "New Adventure",
-                desc: document.getElementById('new-task-desc').value || "Description here...",
-                clue: document.getElementById('new-task-clue').value || "Clue here...",
+                desc: document.getElementById('new-task-desc').value || "...",
+                clue: document.getElementById('new-task-clue').value || "...",
                 completed: false
             };
-            
             boards[mode].push(newTask);
             await saveAllData();
-            
-            // Clear inputs
-            document.getElementById('new-task-time').value = '';
-            document.getElementById('new-task-title').value = '';
-            document.getElementById('new-task-desc').value = '';
-            document.getElementById('new-task-clue').value = '';
             alert("Task added!");
+            document.querySelectorAll('#new-task-time, #new-task-title, #new-task-desc, #new-task-clue').forEach(i => i.value = '');
         };
 
         document.getElementById('delete-task-btn').onclick = async () => {
             const mode = document.getElementById('delete-mode-selector').value;
             const idx = document.getElementById('delete-task-selector').value;
             if (idx === "") return;
-            
-            if (confirm("Permanently delete this task?")) {
+            if (confirm("Delete this task?")) {
                 boards[mode].splice(idx, 1);
                 await saveAllData();
-                alert("Task deleted.");
+                updateDeleteList();
             }
         };
 
@@ -616,23 +607,17 @@
             config.passcode = document.getElementById('edit-year').value;
             config.welcomeMessage = document.getElementById('edit-welcome').value;
             await saveAllData();
-            alert("Global settings updated.");
+            alert("Updated!");
         };
 
-        // Secret Trigger Logic
         document.getElementById('secret-toggle').onclick = () => {
             const now = Date.now();
             if (now - lastSecretClickTime > 1500) secretClicks = 0;
             secretClicks++;
             lastSecretClickTime = now;
             if (secretClicks >= 5) {
-                const panel = document.getElementById('manager-panel');
-                panel.classList.toggle('hidden');
+                toggleAdmin(true);
                 secretClicks = 0;
-                if (!panel.classList.contains('hidden')) {
-                    panel.scrollIntoView({ behavior: 'smooth' });
-                    updateDeleteList();
-                }
             }
         };
 
