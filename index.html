@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Valentine's Dual Agenda ❤️</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
@@ -41,12 +41,13 @@
             min-height: 100vh;
             overflow-x: hidden;
             transition: background-image 0.8s ease;
+            -webkit-font-smoothing: antialiased;
         }
 
         #app {
             width: 100%;
             max-width: 450px;
-            padding: 40px 20px;
+            padding: 20px 16px;
             text-align: center;
         }
 
@@ -67,11 +68,11 @@
             justify-content: center;
             align-items: center;
             z-index: 2000;
-            padding: 30px;
+            padding: 24px;
         }
 
         .heart-icon {
-            font-size: 4rem;
+            font-size: 3.5rem;
             color: var(--primary);
             margin-bottom: 20px;
             animation: pulse 2s infinite;
@@ -82,24 +83,30 @@
             50% { transform: scale(1.1); filter: drop-shadow(0 0 25px var(--primary)); }
         }
 
-        /* Toggle Styles */
+        #main-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
         .mode-toggle {
             display: flex;
             background: rgba(255,255,255,0.05);
             padding: 4px;
             border-radius: 100px;
-            margin: 20px auto;
+            margin: 10px auto 25px;
             width: fit-content;
             border: 1px solid var(--glass-border);
         }
 
         .toggle-btn {
-            padding: 8px 24px;
+            padding: 10px 20px;
             border-radius: 100px;
             cursor: pointer;
             font-size: 0.85rem;
             font-weight: 600;
             transition: 0.3s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .toggle-btn.active {
@@ -108,15 +115,15 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        input, textarea {
+        input, textarea, select {
             background: rgba(255, 255, 255, 0.07);
             border: 1px solid var(--glass-border);
             color: white;
             padding: 16px;
             border-radius: 16px;
-            font-size: 1rem;
+            font-size: 16px;
             width: 100%;
-            max-width: 280px;
+            box-sizing: border-box;
             outline: none;
             margin-bottom: 15px;
             font-family: inherit;
@@ -126,17 +133,19 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 14px 32px;
+            padding: 16px 32px;
             border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
+            width: 100%;
+            max-width: 280px;
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 4px 15px rgba(255, 46, 99, 0.3);
+            -webkit-tap-highlight-color: transparent;
         }
 
         .video-container {
             width: 100%;
-            max-width: 400px;
             aspect-ratio: 16/9;
             border-radius: 20px;
             overflow: hidden;
@@ -147,37 +156,111 @@
 
         iframe { width: 100%; height: 100%; border: none; }
 
-        .visualizer-container { position: relative; width: 220px; height: 180px; margin: 0 auto 30px; }
+        .visualizer-container { 
+            position: relative; 
+            width: 180px; 
+            height: 150px; 
+            margin: 0 auto 20px; 
+        }
         .heart-svg { width: 100%; height: 100%; }
         .heart-segment { fill: var(--empty); transition: fill 0.8s ease; }
         .heart-segment.filled { fill: var(--primary); }
 
-        .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px; }
-        .task-trigger { padding: 16px; text-align: left; cursor: pointer; position: relative; overflow: hidden; transition: all 0.4s ease; border: 1px solid var(--glass-border); border-radius: 18px;}
+        .interaction-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            margin-bottom: 30px; 
+        }
+
+        .task-trigger { 
+            padding: 14px; 
+            text-align: left; 
+            cursor: pointer; 
+            position: relative; 
+            overflow: hidden; 
+            transition: all 0.4s ease; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 18px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         .task-trigger.locked { 
             opacity: 0.3; 
-            filter: blur(8px) grayscale(1);
+            filter: blur(4px) grayscale(1);
             pointer-events: none;
         }
         .task-trigger.completed { border-color: var(--primary); background: rgba(255, 46, 99, 0.05); }
         .task-trigger span { display: block; font-size: 0.65rem; color: var(--accent); font-weight: 700; text-transform: uppercase; }
-        .task-trigger strong { display: block; font-size: 0.85rem; margin-top: 4px; }
+        .task-trigger strong { display: block; font-size: 0.8rem; margin-top: 4px; line-height: 1.2; }
 
-        .detail-view { padding: 24px; margin-top: 20px; text-align: left; }
-        .clue-box { background: rgba(255, 46, 99, 0.1); border: 1px dashed var(--primary); padding: 16px; border-radius: 16px; margin-top: 20px; color: var(--accent); }
+        .detail-view { 
+            padding: 20px; 
+            margin-top: 20px; 
+            text-align: left; 
+            animation: fadeIn 0.3s ease-out;
+        }
 
-        #manager-panel { background: #111; padding: 20px; border-radius: 20px; text-align: left; margin-top: 40px; border: 1px solid #333; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .clue-box { 
+            background: rgba(255, 46, 99, 0.1); 
+            border: 1px dashed var(--primary); 
+            padding: 16px; 
+            border-radius: 16px; 
+            margin-top: 20px; 
+            color: var(--accent); 
+            font-size: 0.9rem;
+        }
+
+        #manager-panel { 
+            background: #111; 
+            padding: 20px; 
+            border-radius: 20px; 
+            text-align: left; 
+            margin: 40px 0 20px; 
+            border: 1px solid #333; 
+        }
+
+        .admin-section {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #222;
+        }
+
+        .admin-section h4 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
         
         .secret-trigger {
             display: inline-block;
             cursor: default;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            padding: 0 5px;
         }
 
         .hidden { display: none !important; }
         .loading-ring { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #welcome-modal .modal-card {
+            width: 100%;
+            max-width: 320px;
+            padding: 30px 20px;
+        }
+        #welcome-text-display {
+            margin: 20px 0;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
@@ -194,25 +277,25 @@
         <div id="login-screen" class="overlay-screen hidden">
             <div class="heart-icon">❤️</div>
             <h1 style="font-size: 1.5rem">The Distance Vault</h1>
-            <p style="color: #888; margin-bottom: 20px">When did it all begin?</p>
-            <input type="number" id="passcode" placeholder="YYYY">
+            <p style="color: #888; margin-bottom: 20px; text-align: center;">When did it all begin?</p>
+            <input type="number" id="passcode" placeholder="YYYY" inputmode="numeric">
             <button id="login-btn">Unlock</button>
         </div>
 
         <!-- Video -->
         <div id="video-screen" class="overlay-screen hidden">
-            <h2 style="margin-bottom: 20px; font-size: 1.2rem;">A Message For You</h2>
+            <h2 style="margin-bottom: 20px; font-size: 1.1rem; text-align: center;">A Message For You</h2>
             <div class="video-container">
                 <iframe id="intro-video-frame" src="" allow="fullscreen" allowfullscreen></iframe>
             </div>
-            <p style="font-size: 0.7rem; opacity: 0.6; margin-top: 10px;">(Click play above to watch)</p>
-            <button onclick="skipVideo()" style="margin-top: 25px; background: transparent; border: 1px solid var(--glass-border);">Go to Agenda</button>
+            <p style="font-size: 0.7rem; opacity: 0.6; margin-top: 15px;">(Click play above to watch)</p>
+            <button onclick="skipVideo()" style="margin-top: 25px; background: transparent; border: 1px solid var(--glass-border); font-size: 0.9rem;">Go to Agenda</button>
         </div>
 
         <!-- Welcome -->
         <div id="welcome-modal" class="overlay-screen hidden">
             <div class="modal-card glass">
-                <h2 id="welcome-title" style="color: var(--primary); margin: 0;">For You, My Love</h2>
+                <h2 id="welcome-title" style="color: var(--primary); margin: 0; font-size: 1.3rem;">For You, My Love</h2>
                 <div id="welcome-text-display" class="modal-body"></div>
                 <button onclick="closeModal()">Start Our Day</button>
             </div>
@@ -227,7 +310,7 @@
             
             <div class="mode-toggle">
                 <div id="toggle-romance" class="toggle-btn active" onclick="switchMode('romance')">Romance</div>
-                <div id="toggle-naughty" class="toggle-btn" onclick="switchMode('naughty')">Naughtymance</div>
+                <div id="toggle-naughty" class="toggle-btn" onclick="switchMode('naughty')">Naughty</div>
             </div>
 
             <div class="visualizer-container">
@@ -249,15 +332,46 @@
 
             <!-- Manager Section (Secretly Hidden) -->
             <div id="manager-panel" class="hidden">
-                <h3 style="margin:0 0 10px 0">Admin Settings</h3>
-                <label>Correct Year:</label><br>
-                <input type="number" id="edit-year" style="max-width:100%"><br>
-                <label>Welcome Message:</label><br>
-                <textarea id="edit-welcome" rows="5" style="max-width:100%"></textarea>
-                <button id="save-config-btn" style="width:100%">Save Config</button>
-                <hr style="border:0; border-top:1px solid #333; margin:20px 0">
-                <button onclick="resetAllProgress()" style="background:#444; width:100%; font-size:0.8rem">Reset Everything</button>
-                <p style="font-size: 0.6rem; color: #666; text-align: center; margin-top: 10px;">Tap heart 5 times again to hide</p>
+                <h3 style="margin:0 0 20px 0; font-size: 1.1rem; border-bottom: 2px solid var(--primary); display: inline-block;">Admin Settings</h3>
+                
+                <div class="admin-section">
+                    <h4>Global Config</h4>
+                    <label style="font-size: 0.8rem; opacity: 0.7;">Correct Year (Passcode):</label>
+                    <input type="number" id="edit-year" inputmode="numeric">
+                    <label style="font-size: 0.8rem; opacity: 0.7;">Welcome Text:</label>
+                    <textarea id="edit-welcome" rows="3"></textarea>
+                    <button id="save-config-btn" style="width:100%; max-width: 100%;">Save Global Config</button>
+                </div>
+
+                <div class="admin-section">
+                    <h4>Add New Task</h4>
+                    <select id="new-task-mode">
+                        <option value="romance">Add to Romance</option>
+                        <option value="naughty">Add to Naughty</option>
+                    </select>
+                    <input type="text" id="new-task-time" placeholder="Time (e.g. 10:00 AM)">
+                    <input type="text" id="new-task-title" placeholder="Task Title">
+                    <textarea id="new-task-desc" placeholder="Task Description" rows="2"></textarea>
+                    <input type="text" id="new-task-clue" placeholder="Unlockable Clue">
+                    <button id="add-task-btn" style="width:100%; max-width: 100%; background: #2ecc71;">Add Task</button>
+                </div>
+
+                <div class="admin-section">
+                    <h4>Delete Tasks</h4>
+                    <select id="delete-mode-selector" onchange="updateDeleteList()">
+                        <option value="romance">Romance Section</option>
+                        <option value="naughty">Naughty Section</option>
+                    </select>
+                    <select id="delete-task-selector">
+                        <!-- Populated via JS -->
+                    </select>
+                    <button id="delete-task-btn" style="width:100%; max-width: 100%; background: #c0392b;">Delete Selected Task</button>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button onclick="resetAllProgress()" style="background:#444; width:100%; font-size:0.8rem; max-width: 100%;">Reset All Progress (Uncheck boxes)</button>
+                    <p style="font-size: 0.6rem; color: #666; text-align: center; margin-top: 15px;">Tap heart 5 times again to hide panel</p>
+                </div>
             </div>
         </div>
     </div>
@@ -278,21 +392,22 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'valentines-remote-live';
 
         let app, auth, db;
-        let config = { passcode: "2017", welcomeMessage: "Distance is just a test. I have two paths for you today: The Romantic Journey and the Naughty Adventure. Complete one to unlock the next, or dance between both." };
+        let config = { passcode: "2017", welcomeMessage: "Distance is just a test. I have two paths for you today." };
         
         let currentMode = 'romance';
         let boards = {
+            romance: [],
+            naughty: []
+        };
+
+        // Fallback default tasks if DB is empty
+        const defaultBoards = {
             romance: [
-                { time: "08:00 AM", title: "Morning Poetry", desc: "Write down the first three things that came to your mind when you woke up and realized it was our Valentine's Day. Voice note it to me.", clue: "Check the bathroom mirror for a hidden post-it.", completed: false },
-                { time: "11:00 AM", title: "Memory Mosaic", desc: "Find the oldest photo we have together and tell me the one detail you remember from that day that I've probably forgotten.", clue: "Look under your favorite coffee mug.", completed: false },
-                { time: "02:00 PM", title: "Virtual Bouquet", desc: "I've sent something to your door/phone. Take a moment to enjoy the scent or the sight of it.", clue: "Check your email/messages for a delivery confirmation.", completed: false },
-                { time: "07:00 PM", title: "Sunset Toast", desc: "Pour a glass of whatever you love most. We'll have a 10-minute quiet call just to look at each other.", clue: "The real night begins soon.", completed: false }
+                { time: "08:00 AM", title: "Morning Poetry", desc: "Write down the first three things that came to your mind.", clue: "Check the bathroom mirror.", completed: false },
+                { time: "11:00 AM", title: "Memory Mosaic", desc: "Find the oldest photo we have together.", clue: "Look under your favorite coffee mug.", completed: false }
             ],
             naughty: [
-                { time: "10:00 AM", title: "The Mirror Tease", desc: "Start the day by sending me a mirror selfie... showing just a little bit of what you're wearing (or not wearing) for me later.", clue: "Go check the pocket of your favorite jacket.", completed: false },
-                { time: "01:00 PM", title: "Blind Obedience", desc: "Record a spicy audio note while blindfolded. Describe one thing you want me to do to you tonight.", clue: "Check the drawer where you keep your 'secrets'.", completed: false },
-                { time: "04:00 PM", title: "Wardrobe Check", desc: "Try on that one piece of lingerie you know drives me crazy. Send a teaser video (no faces) so I can 'approve' it.", clue: "Your surprise is hidden where you get ready.", completed: false },
-                { time: "09:00 PM", title: "Instructional Play", desc: "Midnight unlocked. Lights down, camera on, and strictly following my voice. No touching until I say.", clue: "I am yours entirely.", completed: false }
+                { time: "10:00 AM", title: "The Mirror Tease", desc: "Send me a mirror selfie showing a little teaser.", clue: "Check the pocket of your favorite jacket.", completed: false }
             ]
         };
 
@@ -336,11 +451,12 @@
                     config = data.config || config;
                     boards = data.boards || boards;
                     renderApp();
+                    updateDeleteList();
                     
-                    // Sync local inputs in manager
                     document.getElementById('edit-year').value = config.passcode;
                     document.getElementById('edit-welcome').value = config.welcomeMessage;
                 } else {
+                    boards = defaultBoards;
                     saveAllData();
                 }
                 document.getElementById('loading-screen').classList.add('hidden');
@@ -387,10 +503,12 @@
         };
 
         function renderApp() {
-            const currentAgenda = boards[currentMode];
+            const currentAgenda = boards[currentMode] || [];
             const container = document.getElementById('heart-dynamic-segments');
             container.innerHTML = '';
-            const widthPer = 32 / (currentAgenda.length || 1);
+            
+            const count = currentAgenda.length || 1;
+            const widthPer = 32 / count;
 
             currentAgenda.forEach((item, i) => {
                 const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -422,14 +540,15 @@
             
             document.getElementById('detail-content').innerHTML = `
                 <span style="color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">${item.time}</span>
-                <h2 style="margin: 10px 0;">${item.title}</h2>
-                <p style="color: #bbb; line-height: 1.6;">${item.desc}</p>
-                ${!item.completed ? `<button id="complete-btn" style="margin-top: 20px;">I've Done This ❤️</button>` : 
+                <h2 style="margin: 8px 0; font-size: 1.2rem;">${item.title}</h2>
+                <p style="color: #bbb; line-height: 1.6; font-size: 0.95rem;">${item.desc}</p>
+                ${!item.completed ? `<button id="complete-btn" style="margin-top: 20px; width: 100%; max-width: 100%;">I've Done This ❤️</button>` : 
                 `<div class="clue-box"><strong>UNLOCKED CLUE:</strong><br>${item.clue}</div>`}
             `;
             
             const cBtn = document.getElementById('complete-btn');
             if (cBtn) cBtn.onclick = window.completeCurrent;
+            setTimeout(() => detail.scrollIntoView({ behavior: 'smooth' }), 100);
         }
 
         window.completeCurrent = async () => {
@@ -439,7 +558,7 @@
         };
 
         window.resetAllProgress = async () => {
-            if(confirm("Reset everything?")) {
+            if(confirm("Uncheck all completed tasks?")) {
                 Object.values(boards).forEach(b => b.forEach(a => a.completed = false));
                 await saveAllData();
                 activeIndex = -1;
@@ -447,21 +566,49 @@
             }
         };
 
-        // Secret Trigger Logic
-        document.getElementById('secret-toggle').onclick = () => {
-            const now = Date.now();
-            if (now - lastSecretClickTime > 1500) secretClicks = 0;
+        // ADMIN TASK LOGIC
+        window.updateDeleteList = () => {
+            const mode = document.getElementById('delete-mode-selector').value;
+            const selector = document.getElementById('delete-task-selector');
+            selector.innerHTML = '';
+            (boards[mode] || []).forEach((task, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `[${task.time}] ${task.title}`;
+                selector.appendChild(opt);
+            });
+        };
+
+        document.getElementById('add-task-btn').onclick = async () => {
+            const mode = document.getElementById('new-task-mode').value;
+            const newTask = {
+                time: document.getElementById('new-task-time').value || "Noon",
+                title: document.getElementById('new-task-title').value || "New Adventure",
+                desc: document.getElementById('new-task-desc').value || "Description here...",
+                clue: document.getElementById('new-task-clue').value || "Clue here...",
+                completed: false
+            };
             
-            secretClicks++;
-            lastSecretClickTime = now;
+            boards[mode].push(newTask);
+            await saveAllData();
             
-            if (secretClicks >= 5) {
-                const panel = document.getElementById('manager-panel');
-                panel.classList.toggle('hidden');
-                secretClicks = 0;
-                if (!panel.classList.contains('hidden')) {
-                    panel.scrollIntoView({ behavior: 'smooth' });
-                }
+            // Clear inputs
+            document.getElementById('new-task-time').value = '';
+            document.getElementById('new-task-title').value = '';
+            document.getElementById('new-task-desc').value = '';
+            document.getElementById('new-task-clue').value = '';
+            alert("Task added!");
+        };
+
+        document.getElementById('delete-task-btn').onclick = async () => {
+            const mode = document.getElementById('delete-mode-selector').value;
+            const idx = document.getElementById('delete-task-selector').value;
+            if (idx === "") return;
+            
+            if (confirm("Permanently delete this task?")) {
+                boards[mode].splice(idx, 1);
+                await saveAllData();
+                alert("Task deleted.");
             }
         };
 
@@ -469,7 +616,24 @@
             config.passcode = document.getElementById('edit-year').value;
             config.welcomeMessage = document.getElementById('edit-welcome').value;
             await saveAllData();
-            alert("Configuration saved.");
+            alert("Global settings updated.");
+        };
+
+        // Secret Trigger Logic
+        document.getElementById('secret-toggle').onclick = () => {
+            const now = Date.now();
+            if (now - lastSecretClickTime > 1500) secretClicks = 0;
+            secretClicks++;
+            lastSecretClickTime = now;
+            if (secretClicks >= 5) {
+                const panel = document.getElementById('manager-panel');
+                panel.classList.toggle('hidden');
+                secretClicks = 0;
+                if (!panel.classList.contains('hidden')) {
+                    panel.scrollIntoView({ behavior: 'smooth' });
+                    updateDeleteList();
+                }
+            }
         };
 
         document.getElementById('login-btn').onclick = window.checkPasscode;
