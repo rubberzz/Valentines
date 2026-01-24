@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Queen's Valentine's ❤️</title>
+    <title>Valentine's Dual Agenda ❤️</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
@@ -218,12 +218,12 @@
             font-size: 0.9rem;
         }
 
-        /* Centered Admin Modal Styling */
+        /* Better Centered Admin Modal */
         #admin-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.92);
-            backdrop-filter: blur(12px);
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(15px);
             z-index: 3000;
             display: flex;
             justify-content: center;
@@ -234,27 +234,29 @@
         .admin-card {
             width: 100%;
             max-width: 400px;
-            max-height: 90vh;
+            max-height: 85vh;
             overflow-y: auto;
-            background: #111;
+            background: #121212;
             border: 1px solid #333;
-            border-radius: 28px;
-            padding: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 32px;
+            padding: 28px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
 
         .admin-section {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #222;
+            margin-bottom: 24px;
+            padding: 18px;
+            border: 1px solid #222;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.02);
         }
 
         .admin-section h4 {
-            margin: 0 0 14px 0;
-            font-size: 0.9rem;
-            color: var(--accent);
+            margin: 0 0 16px 0;
+            font-size: 0.85rem;
+            color: var(--primary);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
         
         .secret-trigger {
@@ -268,12 +270,6 @@
         .hidden { display: none !important; }
         .loading-ring { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        #welcome-modal .modal-card {
-            width: 100%;
-            max-width: 320px;
-            padding: 30px 20px;
-        }
     </style>
 </head>
 <body>
@@ -283,16 +279,16 @@
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
             <div class="loading-ring"></div>
-            <p id="loading-text">Syncing Connection...</p>
+            <p id="loading-text">Connecting Heartbeats...</p>
         </div>
 
         <!-- Login -->
         <div id="login-screen" class="overlay-screen hidden">
             <div class="heart-icon">❤️</div>
-            <h1 style="font-size: 1.5rem">The Distance Vault</h1>
-            <p style="color: #888; margin-bottom: 20px; text-align: center;">When did it all begin?</p>
+            <h1 style="font-size: 1.5rem">Unlock Your Agenda</h1>
+            <p style="color: #888; margin-bottom: 20px; text-align: center;">Enter the year we met:</p>
             <input type="number" id="passcode" placeholder="YYYY" inputmode="numeric">
-            <button id="login-btn">Unlock</button>
+            <button id="login-btn">Open Heart</button>
         </div>
 
         <!-- Video -->
@@ -301,23 +297,22 @@
             <div class="video-container">
                 <iframe id="intro-video-frame" src="" allow="fullscreen" allowfullscreen></iframe>
             </div>
-            <p style="font-size: 0.7rem; opacity: 0.6; margin-top: 15px;">(Click play above to watch)</p>
-            <button onclick="skipVideo()" style="margin-top: 25px; background: transparent; border: 1px solid var(--glass-border); font-size: 0.9rem;">Go to Agenda</button>
+            <button onclick="skipVideo()" style="margin-top: 25px; background: transparent; border: 1px solid var(--glass-border); font-size: 0.9rem;">Skip to Agenda</button>
         </div>
 
         <!-- Welcome -->
         <div id="welcome-modal" class="overlay-screen hidden">
-            <div class="modal-card glass">
-                <h2 id="welcome-title" style="color: var(--primary); margin: 0; font-size: 1.3rem;">For You, My Love</h2>
+            <div class="modal-card glass" style="max-width: 320px; padding: 30px; text-align: center;">
+                <h2 style="color: var(--primary); margin: 0; font-size: 1.3rem;">For My Love</h2>
                 <div id="welcome-text-display" style="margin: 20px 0; line-height: 1.6; font-size: 0.95rem;"></div>
-                <button onclick="closeModal()">Start Our Day</button>
+                <button onclick="closeModal()">Enter My World</button>
             </div>
         </div>
 
         <!-- Main -->
         <div id="main-content" class="hidden">
             <h1 id="main-title">
-                Distance Means Nothing 
+                My Remote Valentine
                 <span class="secret-trigger" id="secret-toggle">❤️</span>
             </h1>
             
@@ -343,47 +338,47 @@
                 <div id="detail-content"></div>
             </div>
 
-            <!-- BETTER CENTERED ADMIN MODAL -->
+            <!-- Admin Modal (Improved & Centered) -->
             <div id="admin-modal" class="hidden">
                 <div class="admin-card">
-                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin:0; font-size: 1.1rem; color: var(--primary);">Admin Settings</h3>
-                        <span onclick="toggleAdmin(false)" style="cursor:pointer; font-size: 1.5rem;">&times;</span>
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 style="margin:0; font-size: 1.2rem; color: var(--primary);">Admin Controls</h3>
+                        <span onclick="toggleAdmin(false)" style="cursor:pointer; font-size: 1.8rem; padding: 0 10px;">&times;</span>
                     </div>
                     
                     <div class="admin-section">
-                        <h4>Global Config</h4>
+                        <h4>General Settings</h4>
                         <input type="number" id="edit-year" placeholder="Passcode Year" inputmode="numeric">
                         <textarea id="edit-welcome" placeholder="Welcome Message" rows="2"></textarea>
-                        <button id="save-config-btn" style="width:100%; max-width: 100%; padding: 12px; font-size: 0.85rem;">Update Global Info</button>
+                        <button id="save-config-btn" style="width:100%; max-width:100%; height:45px; font-size:0.9rem;">Save Global Config</button>
                     </div>
 
                     <div class="admin-section">
-                        <h4>Task Manager</h4>
+                        <h4>Add New Task</h4>
                         <select id="new-task-mode">
                             <option value="romance">Section: Romance</option>
                             <option value="naughty">Section: Naughty</option>
                         </select>
-                        <input type="text" id="new-task-time" placeholder="Time (e.g. 10:00 AM)">
-                        <input type="text" id="new-task-title" placeholder="Task Title">
-                        <textarea id="new-task-desc" placeholder="Instructions..." rows="2"></textarea>
-                        <input type="text" id="new-task-clue" placeholder="Unlockable Clue">
-                        <button id="add-task-btn" style="width:100%; max-width: 100%; background: #2ecc71; padding: 12px; font-size: 0.85rem;">+ Add Task</button>
+                        <input type="text" id="new-task-time" placeholder="Time (e.g. 11:00 AM)">
+                        <input type="text" id="new-task-title" placeholder="Short Title">
+                        <textarea id="new-task-desc" placeholder="Detailed Instructions..." rows="2"></textarea>
+                        <input type="text" id="new-task-clue" placeholder="Secret Clue (revealed on complete)">
+                        <button id="add-task-btn" style="width:100%; max-width:100%; height:45px; background: #2ecc71; font-size:0.9rem;">+ Add Task</button>
                     </div>
 
                     <div class="admin-section">
-                        <h4>Delete Task</h4>
+                        <h4>Manage Tasks</h4>
                         <select id="delete-mode-selector" onchange="updateDeleteList()">
-                            <option value="romance">From Romance</option>
-                            <option value="naughty">From Naughty</option>
+                            <option value="romance">Romance Tasks</option>
+                            <option value="naughty">Naughty Tasks</option>
                         </select>
                         <select id="delete-task-selector">
-                            <option value="">Select task to remove...</option>
+                            <option value="">Choose task to delete...</option>
                         </select>
-                        <button id="delete-task-btn" style="width:100%; max-width: 100%; background: #c0392b; padding: 12px; font-size: 0.85rem;">Delete Selected</button>
+                        <button id="delete-task-btn" style="width:100%; max-width:100%; height:45px; background: #c0392b; font-size:0.9rem;">Delete Selected</button>
                     </div>
 
-                    <button onclick="resetAllProgress()" style="background:#444; width:100%; font-size:0.8rem; max-width: 100%; padding: 10px;">Reset All Checkboxes</button>
+                    <button onclick="resetAllProgress()" style="background:#333; width:100%; font-size:0.8rem; height:40px; max-width: 100%;">Reset All Checkboxes</button>
                 </div>
             </div>
         </div>
@@ -404,75 +399,81 @@
         };
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'valentines-remote-live';
 
-        let app, auth, db;
-        let config = { passcode: "2017", welcomeMessage: "Distance is just a test. I have two paths for you today." };
-        
-        let currentMode = 'romance';
+        let auth, db;
+        let config = { passcode: "2017", welcomeMessage: "I've planned a special day for you." };
         let boards = { romance: [], naughty: [] };
-
-        let activeIndex = -1;
+        let currentMode = 'romance';
         let user = null;
-        let secretClicks = 0;
-        let lastSecretClickTime = 0;
+        let isUnlocked = sessionStorage.getItem('vday_unlocked') === 'true';
 
-        async function initFirebase() {
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+        async function init() {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                };
+            onAuthStateChanged(auth, (u) => {
+                if (u) {
+                    user = u;
+                    syncData();
+                }
+            });
 
-                onAuthStateChanged(auth, (u) => {
-                    if (u) {
-                        user = u;
-                        startSync();
-                    }
-                });
-
-                await initAuth();
-            } catch (err) { console.error("Auth failed", err); }
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
         }
 
-        function startSync() {
+        function syncData() {
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
             onSnapshot(docRef, (snap) => {
                 if (snap.exists()) {
                     const data = snap.data();
                     config = data.config || config;
                     boards = data.boards || boards;
-                    renderApp();
-                    updateDeleteList();
                     
+                    // Update UI
                     document.getElementById('edit-year').value = config.passcode;
                     document.getElementById('edit-welcome').value = config.welcomeMessage;
+                    
+                    if (isUnlocked) {
+                        showApp();
+                    } else {
+                        document.getElementById('loading-screen').classList.add('hidden');
+                        document.getElementById('login-screen').classList.remove('hidden');
+                    }
+                    renderApp();
+                    updateDeleteList();
                 } else {
-                    saveAllData(); // Initialize first time
+                    saveToCloud(); // Initial save
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('login-screen').classList.remove('hidden');
                 }
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('login-screen').classList.remove('hidden');
-            }, (err) => console.error(err));
+            }, (err) => console.error("Sync error:", err));
         }
 
-        async function saveAllData() {
+        async function saveToCloud() {
             if (!user) return;
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
             await setDoc(docRef, { config, boards });
         }
 
+        function showApp() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+        }
+
         window.checkPasscode = () => {
             const val = document.getElementById('passcode').value;
             if (val === config.passcode.toString()) {
+                isUnlocked = true;
+                sessionStorage.setItem('vday_unlocked', 'true');
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('video-screen').classList.remove('hidden');
                 document.getElementById('intro-video-frame').src = "https://drive.google.com/file/d/1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF/preview";
-            } else { alert("Incorrect Year."); }
+            } else { alert("Not quite, my love."); }
         };
 
         window.skipVideo = () => {
@@ -483,25 +484,26 @@
 
         window.closeModal = () => {
             document.getElementById('welcome-modal').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
+            showApp();
         };
 
         window.switchMode = (mode) => {
             currentMode = mode;
-            activeIndex = -1;
             document.getElementById('task-detail').classList.add('hidden');
             document.body.className = mode === 'naughty' ? 'naughty-mode' : '';
             document.getElementById('toggle-romance').classList.toggle('active', mode === 'romance');
             document.getElementById('toggle-naughty').classList.toggle('active', mode === 'naughty');
             renderApp();
+            updateDeleteList();
         };
 
         function renderApp() {
             const currentAgenda = boards[currentMode] || [];
+            
+            // Heart Visualizer
             const container = document.getElementById('heart-dynamic-segments');
             container.innerHTML = '';
-            
-            const count = currentAgenda.length || 1;
+            const count = Math.max(currentAgenda.length, 1);
             const widthPer = 32 / count;
 
             currentAgenda.forEach((item, i) => {
@@ -514,6 +516,7 @@
                 container.appendChild(rect);
             });
 
+            // Grid
             const grid = document.getElementById('interaction-grid');
             grid.innerHTML = '';
             currentAgenda.forEach((item, i) => {
@@ -526,8 +529,9 @@
             });
         }
 
+        let currentActiveTaskIdx = -1;
         function showTask(index) {
-            activeIndex = index;
+            currentActiveTaskIdx = index;
             const item = boards[currentMode][index];
             const detail = document.getElementById('task-detail');
             detail.classList.remove('hidden');
@@ -536,28 +540,27 @@
                 <span style="color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.7rem;">${item.time}</span>
                 <h2 style="margin: 8px 0; font-size: 1.2rem;">${item.title}</h2>
                 <p style="color: #bbb; line-height: 1.6; font-size: 0.95rem;">${item.desc}</p>
-                ${!item.completed ? `<button id="complete-btn" style="margin-top: 20px; width: 100%; max-width: 100%;">I've Done This ❤️</button>` : 
+                ${!item.completed ? `<button id="complete-btn" style="margin-top: 20px; width: 100%; max-width: 100%;">Mark as Complete ❤️</button>` : 
                 `<div class="clue-box"><strong>UNLOCKED CLUE:</strong><br>${item.clue}</div>`}
             `;
             
             const cBtn = document.getElementById('complete-btn');
-            if (cBtn) cBtn.onclick = window.completeCurrent;
+            if (cBtn) cBtn.onclick = async () => {
+                boards[currentMode][currentActiveTaskIdx].completed = true;
+                await saveToCloud();
+            };
             setTimeout(() => detail.scrollIntoView({ behavior: 'smooth' }), 100);
         }
 
-        window.completeCurrent = async () => {
-            if (activeIndex === -1) return;
-            boards[currentMode][activeIndex].completed = true;
-            await saveAllData();
-        };
-
-        window.resetAllProgress = async () => {
-            if(confirm("Uncheck all completed tasks?")) {
-                Object.keys(boards).forEach(k => boards[k].forEach(a => a.completed = false));
-                await saveAllData();
-                activeIndex = -1;
-                document.getElementById('task-detail').classList.add('hidden');
-            }
+        // Admin Functions
+        let clickCount = 0;
+        let lastClick = 0;
+        document.getElementById('secret-toggle').onclick = () => {
+            const now = Date.now();
+            if (now - lastClick > 1000) clickCount = 0;
+            clickCount++;
+            lastClick = now;
+            if (clickCount >= 5) toggleAdmin(true);
         };
 
         window.toggleAdmin = (show) => {
@@ -568,7 +571,7 @@
         window.updateDeleteList = () => {
             const mode = document.getElementById('delete-mode-selector').value;
             const selector = document.getElementById('delete-task-selector');
-            selector.innerHTML = '<option value="">Select task...</option>';
+            selector.innerHTML = '<option value="">Choose task to delete...</option>';
             (boards[mode] || []).forEach((task, i) => {
                 const opt = document.createElement('option');
                 opt.value = i;
@@ -579,50 +582,44 @@
 
         document.getElementById('add-task-btn').onclick = async () => {
             const mode = document.getElementById('new-task-mode').value;
-            const newTask = {
-                time: document.getElementById('new-task-time').value || "Noon",
-                title: document.getElementById('new-task-title').value || "New Adventure",
+            const task = {
+                time: document.getElementById('new-task-time').value || "TBD",
+                title: document.getElementById('new-task-title').value || "Task",
                 desc: document.getElementById('new-task-desc').value || "...",
                 clue: document.getElementById('new-task-clue').value || "...",
                 completed: false
             };
-            boards[mode].push(newTask);
-            await saveAllData();
-            alert("Task added!");
-            document.querySelectorAll('#new-task-time, #new-task-title, #new-task-desc, #new-task-clue').forEach(i => i.value = '');
+            boards[mode].push(task);
+            await saveToCloud();
+            alert("Added!");
+            document.querySelectorAll('#new-task-time, #new-task-title, #new-task-desc, #new-task-clue').forEach(el => el.value = '');
         };
 
         document.getElementById('delete-task-btn').onclick = async () => {
             const mode = document.getElementById('delete-mode-selector').value;
             const idx = document.getElementById('delete-task-selector').value;
             if (idx === "") return;
-            if (confirm("Delete this task?")) {
-                boards[mode].splice(idx, 1);
-                await saveAllData();
-                updateDeleteList();
-            }
+            boards[mode].splice(idx, 1);
+            await saveToCloud();
+            updateDeleteList();
         };
 
         document.getElementById('save-config-btn').onclick = async () => {
             config.passcode = document.getElementById('edit-year').value;
             config.welcomeMessage = document.getElementById('edit-welcome').value;
-            await saveAllData();
-            alert("Updated!");
+            await saveToCloud();
+            alert("Settings saved!");
         };
 
-        document.getElementById('secret-toggle').onclick = () => {
-            const now = Date.now();
-            if (now - lastSecretClickTime > 1500) secretClicks = 0;
-            secretClicks++;
-            lastSecretClickTime = now;
-            if (secretClicks >= 5) {
-                toggleAdmin(true);
-                secretClicks = 0;
+        window.resetAllProgress = async () => {
+            if (confirm("Reset all checkboxes?")) {
+                Object.keys(boards).forEach(k => boards[k].forEach(t => t.completed = false));
+                await saveToCloud();
             }
         };
 
         document.getElementById('login-btn').onclick = window.checkPasscode;
-        initFirebase();
+        init();
     </script>
 </body>
 </html>
