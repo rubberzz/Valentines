@@ -243,7 +243,17 @@
             padding: 16px;
             margin-top: 20px;
             border: 1px solid var(--glass-border);
+            text-align: left;
         }
+
+        .hint-text {
+            color: #888;
+            font-size: 0.75rem;
+            font-style: italic;
+            margin-top: 8px;
+            display: none;
+        }
+        .hint-text.visible { display: block; }
 
         /* Admin Styles - Expanded */
         #admin-modal {
@@ -259,7 +269,7 @@
 
         .admin-card {
             width: 100%;
-            max-width: 650px; /* Expanded for better editing */
+            max-width: 700px;
             max-height: 90vh;
             overflow-y: auto;
             background: #111;
@@ -303,13 +313,6 @@
     </style>
 </head>
 <body>
-
-    <!-- Naughty Section Decor -->
-    <div class="naughty-decor" style="top: 15%; left: 8%; --d: 5.5s;">😈</div>
-    <div class="naughty-decor" style="top: 28%; right: 10%; --d: 7.2s;">🫦</div>
-    <div class="naughty-decor" style="bottom: 18%; left: 12%; --d: 4.8s;">🍑</div>
-    <div class="naughty-decor" style="bottom: 35%; right: 15%; --d: 6.4s;">💄</div>
-    <div class="naughty-decor" style="top: 65%; left: 6%; --d: 8.5s;">😈</div>
 
     <div id="app">
         <div id="loading-screen" class="overlay-screen">
@@ -394,10 +397,11 @@
                         <input type="text" id="new-task-title" placeholder="Title">
                         <textarea id="new-task-desc" placeholder="Instructions..." rows="2"></textarea>
                         
-                        <div style="border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-                            <p style="font-size: 0.7rem; color: #888; margin-top: 0;">Verification Step (Optional)</p>
-                            <input type="text" id="new-task-question" placeholder="Verification Question (e.g. 'What is the secret word?')">
+                        <div style="border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.2);">
+                            <p style="font-size: 0.7rem; color: var(--accent); margin-top: 0; font-weight: 700;">Verification Step</p>
+                            <input type="text" id="new-task-question" placeholder="Question">
                             <input type="text" id="new-task-answer" placeholder="Correct Answer">
+                            <input type="text" id="new-task-hint" placeholder="Hint (shown on mistake)">
                         </div>
 
                         <input type="text" id="new-task-clue" placeholder="Secret Clue (revealed on finish)">
@@ -444,9 +448,7 @@
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
-
             onAuthStateChanged(auth, (u) => { if (u) { user = u; syncData(); } });
-
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
@@ -468,9 +470,7 @@
                     }
                     renderApp();
                     renderAdminTaskList();
-                } else {
-                    saveToCloud();
-                }
+                } else saveToCloud();
             });
         }
 
@@ -536,7 +536,6 @@
             const t = boards[currentMode][index];
             const modal = document.getElementById('task-modal');
             const content = document.getElementById('task-modal-content');
-            
             const hasQuestion = t.question && t.question.trim() !== "";
 
             content.innerHTML = `
@@ -550,6 +549,7 @@
                             <div class="question-box">
                                 <p style="font-size: 0.85rem; color: var(--accent); margin-top:0;"><strong>Verification Step:</strong><br>${t.question}</p>
                                 <input type="text" id="task-answer-input" placeholder="Your answer..." style="margin-bottom:0;">
+                                <div id="task-hint-box" class="hint-text">💡 Hint: ${t.hint || "Think carefully!"}</div>
                             </div>
                         ` : ''}
                         <button id="complete-btn" style="margin-top: 25px;">Mark as Done ❤️</button>
@@ -565,22 +565,18 @@
                     const userInput = document.getElementById('task-answer-input').value.trim().toLowerCase();
                     const correctVal = t.answer.trim().toLowerCase();
                     if(userInput !== correctVal) {
-                        alert("That's not quite right, try again!");
+                        document.getElementById('task-hint-box').classList.add('visible');
                         return;
                     }
                 }
-                
                 boards[currentMode][index].completed = true;
                 await saveToCloud();
                 openTaskModal(index);
             };
-            
             modal.classList.add('active');
         };
 
-        window.closeTaskModal = (e) => {
-            document.getElementById('task-modal').classList.remove('active');
-        };
+        window.closeTaskModal = (e) => document.getElementById('task-modal').classList.remove('active');
 
         // Admin 
         let clicks = 0;
@@ -620,11 +616,10 @@
             document.getElementById('new-task-desc').value = t.desc;
             document.getElementById('new-task-question').value = t.question || "";
             document.getElementById('new-task-answer').value = t.answer || "";
+            document.getElementById('new-task-hint').value = t.hint || "";
             document.getElementById('new-task-clue').value = t.clue || "";
             document.getElementById('add-task-btn').innerText = "Update";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            
-            // Scroll form into view
             document.getElementById('task-form-title').scrollIntoView({ behavior: 'smooth' });
         };
 
@@ -637,10 +632,10 @@
                 desc: document.getElementById('new-task-desc').value,
                 question: document.getElementById('new-task-question').value,
                 answer: document.getElementById('new-task-answer').value,
+                hint: document.getElementById('new-task-hint').value,
                 clue: document.getElementById('new-task-clue').value,
                 completed: idx !== "" ? boards[m][idx].completed : false
             };
-            
             if(idx !== "") boards[m][idx] = data; else boards[m].push(data);
             await saveToCloud();
             document.getElementById('cancel-edit-btn').click();
@@ -651,7 +646,7 @@
             document.getElementById('edit-task-index').value = "";
             document.getElementById('add-task-btn').innerText = "Save Task";
             document.getElementById('cancel-edit-btn').classList.add('hidden');
-            ['new-task-time','new-task-title','new-task-desc','new-task-clue', 'new-task-question', 'new-task-answer'].forEach(id => document.getElementById(id).value = "");
+            ['new-task-time','new-task-title','new-task-desc','new-task-clue', 'new-task-question', 'new-task-answer', 'new-task-hint'].forEach(id => document.getElementById(id).value = "");
         };
 
         document.getElementById('save-config-btn').onclick = async () => {
