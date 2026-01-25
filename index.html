@@ -237,7 +237,15 @@
             animation: fadeIn 0.5s ease;
         }
 
-        /* Admin Styles */
+        .question-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Admin Styles - Expanded */
         #admin-modal {
             position: fixed;
             inset: 0;
@@ -251,7 +259,7 @@
 
         .admin-card {
             width: 100%;
-            max-width: 440px;
+            max-width: 650px; /* Expanded for better editing */
             max-height: 90vh;
             overflow-y: auto;
             background: #111;
@@ -282,6 +290,7 @@
             justify-content: center;
             font-size: 1rem;
             margin-left: 4px;
+            cursor: pointer;
         }
 
         .visualizer-container { position: relative; width: 160px; height: 140px; margin: 0 auto 24px; }
@@ -371,16 +380,28 @@
                     </div>
 
                     <div style="background:rgba(255,255,255,0.02); padding: 18px; border-radius: 20px; margin-bottom: 24px; text-align: left;">
-                        <h4 id="task-form-title" style="margin-top:0; font-size:0.8rem; text-transform:uppercase; color:var(--primary);">Add New Task</h4>
+                        <h4 id="task-form-title" style="margin-top:0; font-size:0.8rem; text-transform:uppercase; color:var(--primary);">Add/Edit Task</h4>
                         <input type="hidden" id="edit-task-index">
-                        <select id="new-task-mode">
-                            <option value="romance">Romance Section</option>
-                            <option value="naughty">Naughty Section</option>
-                        </select>
-                        <input type="text" id="new-task-time" placeholder="Time (e.g. 10:00 AM)">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <select id="new-task-mode">
+                                <option value="romance">Romance Section</option>
+                                <option value="naughty">Naughty Section</option>
+                            </select>
+                            <input type="text" id="new-task-time" placeholder="Time (e.g. 10:00 AM)">
+                        </div>
+                        
                         <input type="text" id="new-task-title" placeholder="Title">
                         <textarea id="new-task-desc" placeholder="Instructions..." rows="2"></textarea>
-                        <input type="text" id="new-task-clue" placeholder="Secret Clue">
+                        
+                        <div style="border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+                            <p style="font-size: 0.7rem; color: #888; margin-top: 0;">Verification Step (Optional)</p>
+                            <input type="text" id="new-task-question" placeholder="Verification Question (e.g. 'What is the secret word?')">
+                            <input type="text" id="new-task-answer" placeholder="Correct Answer">
+                        </div>
+
+                        <input type="text" id="new-task-clue" placeholder="Secret Clue (revealed on finish)">
+                        
                         <div style="display:flex; gap: 8px;">
                             <button id="add-task-btn" style="background:#2ecc71; height:44px;">Save Task</button>
                             <button id="cancel-edit-btn" class="hidden" style="background:#444; height:44px;">Cancel</button>
@@ -516,18 +537,39 @@
             const modal = document.getElementById('task-modal');
             const content = document.getElementById('task-modal-content');
             
+            const hasQuestion = t.question && t.question.trim() !== "";
+
             content.innerHTML = `
                 <div style="text-align: left;">
                     <span style="color: var(--primary); font-weight: 800; font-size: 0.7rem; text-transform: uppercase;">${t.time}</span>
                     <h2 style="margin: 10px 0 15px; font-size: 1.4rem; line-height: 1.2;">${t.title}</h2>
                     <p style="color: #ccc; line-height: 1.6; font-size: 1rem;">${t.desc}</p>
-                    ${!t.completed ? `<button id="complete-btn" style="margin-top: 25px;">Mark as Done ❤️</button>` : 
-                    `<div class="clue-box"><strong>UNLOCKED CLUE:</strong><br>${t.clue}</div>`}
+                    
+                    ${!t.completed ? `
+                        ${hasQuestion ? `
+                            <div class="question-box">
+                                <p style="font-size: 0.85rem; color: var(--accent); margin-top:0;"><strong>Verification Step:</strong><br>${t.question}</p>
+                                <input type="text" id="task-answer-input" placeholder="Your answer..." style="margin-bottom:0;">
+                            </div>
+                        ` : ''}
+                        <button id="complete-btn" style="margin-top: 25px;">Mark as Done ❤️</button>
+                    ` : `
+                        <div class="clue-box"><strong>UNLOCKED CLUE:</strong><br>${t.clue || 'No clue for this one, just love!'}</div>
+                    `}
                 </div>
             `;
             
             const btn = document.getElementById('complete-btn');
             if(btn) btn.onclick = async () => {
+                if(hasQuestion) {
+                    const userInput = document.getElementById('task-answer-input').value.trim().toLowerCase();
+                    const correctVal = t.answer.trim().toLowerCase();
+                    if(userInput !== correctVal) {
+                        alert("That's not quite right, try again!");
+                        return;
+                    }
+                }
+                
                 boards[currentMode][index].completed = true;
                 await saveToCloud();
                 openTaskModal(index);
@@ -561,6 +603,13 @@
             });
         };
 
+        window.delTask = async (m, i) => {
+            if(confirm("Delete this task?")) {
+                boards[m].splice(i, 1);
+                await saveToCloud();
+            }
+        };
+
         window.prepEdit = (m, i) => {
             const t = boards[m][i];
             document.getElementById('task-form-title').innerText = "Edit Task";
@@ -569,9 +618,14 @@
             document.getElementById('new-task-time').value = t.time;
             document.getElementById('new-task-title').value = t.title;
             document.getElementById('new-task-desc').value = t.desc;
-            document.getElementById('new-task-clue').value = t.clue;
+            document.getElementById('new-task-question').value = t.question || "";
+            document.getElementById('new-task-answer').value = t.answer || "";
+            document.getElementById('new-task-clue').value = t.clue || "";
             document.getElementById('add-task-btn').innerText = "Update";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            // Scroll form into view
+            document.getElementById('task-form-title').scrollIntoView({ behavior: 'smooth' });
         };
 
         document.getElementById('add-task-btn').onclick = async () => {
@@ -581,9 +635,12 @@
                 time: document.getElementById('new-task-time').value,
                 title: document.getElementById('new-task-title').value,
                 desc: document.getElementById('new-task-desc').value,
+                question: document.getElementById('new-task-question').value,
+                answer: document.getElementById('new-task-answer').value,
                 clue: document.getElementById('new-task-clue').value,
                 completed: idx !== "" ? boards[m][idx].completed : false
             };
+            
             if(idx !== "") boards[m][idx] = data; else boards[m].push(data);
             await saveToCloud();
             document.getElementById('cancel-edit-btn').click();
@@ -594,14 +651,14 @@
             document.getElementById('edit-task-index').value = "";
             document.getElementById('add-task-btn').innerText = "Save Task";
             document.getElementById('cancel-edit-btn').classList.add('hidden');
-            ['new-task-time','new-task-title','new-task-desc','new-task-clue'].forEach(id => document.getElementById(id).value = "");
+            ['new-task-time','new-task-title','new-task-desc','new-task-clue', 'new-task-question', 'new-task-answer'].forEach(id => document.getElementById(id).value = "");
         };
 
         document.getElementById('save-config-btn').onclick = async () => {
             config.passcode = document.getElementById('edit-year').value;
             config.welcomeMessage = document.getElementById('edit-welcome').value;
             await saveToCloud();
-            alert("Updated!");
+            alert("Settings Updated!");
         };
 
         document.getElementById('login-btn').onclick = window.checkPasscode;
