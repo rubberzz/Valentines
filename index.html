@@ -151,7 +151,6 @@
             </div>
         </div>
 
-        <!-- Admin Settings -->
         <div id="admin-modal" class="hidden">
             <div class="admin-card">
                 <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -182,12 +181,11 @@
                     </div>
 
                     <div id="extra-fields-image" class="hidden">
-                        <p style="font-size:0.7rem; color:var(--primary); margin-bottom:4px;">Secret Photo URL:</p>
-                        <input type="text" id="new-task-img" placeholder="https://image-link.com/photo.jpg">
+                        <input type="text" id="new-task-img" placeholder="Secret Photo URL">
                     </div>
 
-                    <input type="text" id="new-task-clue" placeholder="Reward Clue (Revealed on finish)">
-                    <button id="add-task-btn">Add Task to Agenda</button>
+                    <input type="text" id="new-task-clue" placeholder="Reward Clue">
+                    <button id="add-task-btn">Add Task</button>
                 </div>
                 <div id="admin-task-list" style="margin-top:20px; text-align:left;"></div>
             </div>
@@ -199,35 +197,30 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let auth, db, user, config = { passcode: "2017" }, boards = { romance: [], naughty: [] };
-        let currentMode = 'romance', isUnlocked = sessionStorage.getItem('vday_verified') === 'true';
+        let auth, db, user;
+        let config = { passcode: "2017" };
+        let boards = { romance: [], naughty: [] };
+        let currentMode = 'romance';
+        let isUnlocked = sessionStorage.getItem('vday_verified') === 'true';
         let gameActive = false;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v2';
 
         async function init() {
             try {
-                // WAIT for platform to inject config
-                const waitForConfig = () => {
-                    return new Promise((resolve) => {
-                        const check = () => {
-                            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                                resolve(JSON.parse(__firebase_config));
-                            } else {
-                                setTimeout(check, 50);
-                            }
-                        };
-                        check();
-                    });
-                };
+                // RULE 1: Direct extraction of config
+                if (typeof __firebase_config === 'undefined') {
+                    document.getElementById('loading-text').innerText = "System error: Config missing.";
+                    return;
+                }
 
-                const firebaseConfig = await waitForConfig();
-                
-                // Initialize App only after config is valid
+                const firebaseConfig = JSON.parse(__firebase_config);
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Mandated Auth sequence
-                const initAuth = async () => {
+                // RULE 3: Auth Before Queries
+                const performAuth = async () => {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
@@ -235,25 +228,23 @@
                     }
                 };
 
-                await initAuth();
+                await performAuth();
 
                 onAuthStateChanged(auth, (u) => {
                     if (u) {
                         user = u;
-                        syncData();
+                        startSync();
                     }
                 });
             } catch (err) {
-                console.error("Initialization Error:", err);
-                document.getElementById('loading-text').innerText = "Auth Error: Invalid Configuration.";
+                console.error("Init error", err);
+                document.getElementById('loading-text').innerText = "Connection failed. Please retry.";
             }
         }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v1';
-
-        function syncData() {
+        function startSync() {
             if (!user) return;
-            // Use specific required path structure
+            // RULE 1: Mandatory path
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
             
             onSnapshot(docRef, (snap) => {
@@ -267,11 +258,13 @@
                     renderApp();
                     renderAdminTaskList();
                 } else {
+                    // Initialize first-time data
                     saveToCloud();
                     document.getElementById('login-screen').classList.remove('hidden');
                 }
             }, (err) => {
-                console.error("Firestore Permission/Sync Error:", err);
+                console.error("Sync error", err);
+                document.getElementById('loading-text').innerText = "Access denied.";
             });
         }
 
@@ -279,9 +272,7 @@
             if (!user) return;
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState'), { config, boards });
-            } catch (err) {
-                console.error("Save Error:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function showAgenda() {
@@ -351,42 +342,21 @@
             content.innerHTML = `<div style="text-align:left;"><span style="color:var(--primary); font-size:0.7rem;">${t.time}</span><h2 style="margin: 5px 0;">${t.title}</h2><p style="font-size: 0.95rem; line-height: 1.5;">${t.desc}</p></div>`;
             
             if(!t.completed) {
-                if(t.type === 'game_pen') {
-                    gameArea.classList.remove('hidden');
-                    startPenGame(index);
-                } else if(t.type === 'game_heat') {
-                    gameArea.classList.remove('hidden');
-                    startHeatGame(index);
-                } else if(t.type === 'game_scratch') {
-                    gameArea.classList.remove('hidden');
-                    imgBg.classList.remove('hidden');
-                    imgBg.src = t.img || 'https://via.placeholder.com/400x400?text=Secret+Photo';
-                    startScratchGame(index);
-                } else if(t.question) {
-                    content.innerHTML += `
-                        <div class="question-box">
-                            <p style="font-size:0.85rem; color:var(--accent); margin-bottom: 10px;"><strong>Question:</strong> ${t.question}</p>
-                            <input type="text" id="task-answer-input" placeholder="Your answer...">
-                            <div id="task-hint-box" class="hidden" style="color:#ff8ca6; font-size:0.8rem; margin:10px 0;">💡 Hint: ${t.hint || "Think back..."}</div>
-                        </div>
-                        <button id="complete-btn" style="margin-top:20px;">Complete Task ❤️</button>
-                    `;
-                } else {
-                    content.innerHTML += `<button id="complete-btn" style="margin-top:20px;">Complete Task ❤️</button>`;
-                }
+                if(t.type === 'game_pen') { gameArea.classList.remove('hidden'); startPenGame(index); }
+                else if(t.type === 'game_heat') { gameArea.classList.remove('hidden'); startHeatGame(index); }
+                else if(t.type === 'game_scratch') { gameArea.classList.remove('hidden'); imgBg.classList.remove('hidden'); imgBg.src = t.img || 'https://via.placeholder.com/400?text=Secret'; startScratchGame(index); }
+                else if(t.question) {
+                    content.innerHTML += `<div class="question-box"><p style="margin:10px 0; color:var(--accent); font-size:0.9rem;">Q: ${t.question}</p><input type="text" id="ans" placeholder="Answer..."><div id="hnt" class="hidden" style="color:#ff8ca6; font-size:0.8rem; margin:5px 0;">Hint: ${t.hint || "..."}</div></div><button id="cmp">Check Answer</button>`;
+                } else { content.innerHTML += `<button id="cmp">Complete Task ❤️</button>`; }
             } else {
-                content.innerHTML += `<div style="background:rgba(255,46,99,0.1); border:1px dashed var(--primary); padding:18px; border-radius:18px; margin-top:24px; text-align: left;"><strong>REWARD CLUE:</strong><br>${t.clue || 'No clue provided.'}</div>`;
-                if(t.type === 'game_scratch' && t.img) {
-                    content.innerHTML += `<img src="${t.img}" style="width:100%; border-radius:16px; margin-top:20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">`;
-                }
+                content.innerHTML += `<div style="background:rgba(255,46,99,0.1); border:1px dashed var(--primary); padding:18px; border-radius:18px; margin-top:24px; text-align: left;"><strong>CLUE:</strong> ${t.clue || 'N/A'}</div>`;
             }
 
-            const btn = document.getElementById('complete-btn');
+            const btn = document.getElementById('cmp');
             if(btn) btn.onclick = async () => {
                 if(t.question) {
-                    const input = document.getElementById('task-answer-input').value.trim().toLowerCase();
-                    if(input !== t.answer.trim().toLowerCase()) { 
-                        document.getElementById('task-hint-box').classList.remove('hidden'); 
+                    if(document.getElementById('ans').value.trim().toLowerCase() !== t.answer.trim().toLowerCase()) { 
+                        document.getElementById('hnt').classList.remove('hidden'); 
                         return; 
                     }
                 }
@@ -397,103 +367,72 @@
             modal.classList.add('active');
         };
 
-        // Mini Games (Simplified logic for brevity)
-        function startPenGame(taskIndex) {
+        // Mini Games Logic
+        function startPenGame(idx) {
             let score = 0; gameActive = true;
             const canvas = document.getElementById('game-canvas');
             const ctx = canvas.getContext('2d');
             const container = document.getElementById('game-canvas-container');
             canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
-            document.getElementById('game-score').innerText = `Score: 0/3`;
-
             let pen = { x: 50, y: canvas.height - 40, vx: 0, vy: 0, dragging: false, startX: 0, startY: 0 };
             let cup = { x: canvas.width - 80, y: canvas.height - 60, w: 40, h: 50 };
-
             function draw() {
                 if(!gameActive) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0,0,canvas.width,canvas.height);
                 ctx.fillStyle = '#444'; ctx.fillRect(cup.x, cup.y, cup.w, cup.h);
-                ctx.fillStyle = 'var(--primary)'; ctx.fillRect(pen.x - 15, pen.y - 3, 30, 6);
-                
+                ctx.fillStyle = 'var(--primary)'; ctx.fillRect(pen.x-15, pen.y-3, 30, 6);
                 if(pen.dragging) {
-                    ctx.beginPath(); ctx.moveTo(pen.x, pen.y);
-                    ctx.lineTo(pen.x + (pen.startX - pen.currentX), pen.y + (pen.startY - pen.currentY));
+                    ctx.beginPath(); ctx.moveTo(pen.x, pen.y); ctx.lineTo(pen.x + (pen.startX - pen.currentX), pen.y + (pen.startY - pen.currentY));
                     ctx.strokeStyle = 'white'; ctx.stroke();
-                }
-                if(!pen.dragging && (pen.vx !== 0 || pen.vy !== 0)) {
+                } else if(pen.vx !== 0 || pen.vy !== 0) {
                     pen.vy += 0.25; pen.x += pen.vx; pen.y += pen.vy;
-                    if(pen.x > cup.x && pen.x < cup.x + cup.w && pen.y > cup.y && pen.y < cup.y + cup.h) {
-                        score++; document.getElementById('game-score').innerText = `Score: ${score}/3`;
-                        reset(); if(score >= 3) winGame(taskIndex);
-                    }
+                    if(pen.x > cup.x && pen.x < cup.x+cup.w && pen.y > cup.y && pen.y < cup.y+cup.h) { score++; if(score >= 3) winGame(idx); else reset(); }
                     if(pen.y > canvas.height || pen.x > canvas.width || pen.x < 0) reset();
                 }
+                document.getElementById('game-score').innerText = `Score: ${score}/3`;
                 requestAnimationFrame(draw);
             }
             const reset = () => { pen.x = 50; pen.y = canvas.height - 40; pen.vx = 0; pen.vy = 0; };
-            canvas.onmousedown = canvas.ontouchstart = (e) => {
-                const pos = getMousePos(canvas, e);
-                if(Math.hypot(pos.x - pen.x, pos.y - pen.y) < 50) { pen.dragging = true; pen.startX = pos.x; pen.startY = pos.y; pen.currentX = pos.x; pen.currentY = pos.y; }
-            };
-            window.onmousemove = window.ontouchmove = (e) => { if(pen.dragging) { const pos = getMousePos(canvas, e); pen.currentX = pos.x; pen.currentY = pos.y; } };
-            window.onmouseup = window.ontouchend = () => { if(!pen.dragging) return; pen.dragging = false; pen.vx = (pen.startX - pen.currentX) * 0.15; pen.vy = (pen.startY - pen.currentY) * 0.15; };
+            canvas.onmousedown = canvas.ontouchstart = (e) => { const p = getMousePos(canvas, e); if(Math.hypot(p.x-pen.x, p.y-pen.y)<50){pen.dragging=true; pen.startX=p.x; pen.startY=p.y; pen.currentX=p.x; pen.currentY=p.y;}};
+            window.onmousemove = window.ontouchmove = (e) => { if(pen.dragging){ const p = getMousePos(canvas, e); pen.currentX=p.x; pen.currentY=p.y;}};
+            window.onmouseup = window.ontouchend = () => { if(!pen.dragging) return; pen.dragging=false; pen.vx=(pen.startX-pen.currentX)*0.15; pen.vy=(pen.startY-pen.currentY)*0.15; };
             draw();
         }
 
-        function startHeatGame(taskIndex) {
+        function startHeatGame(idx) {
             gameActive = true;
-            const canvas = document.getElementById('game-canvas');
-            const ctx = canvas.getContext('2d');
             const container = document.getElementById('game-canvas-container');
-            canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
-            const target = { x: Math.random() * (canvas.width - 60) + 30, y: Math.random() * (canvas.height - 60) + 30 };
-
-            canvas.onmousemove = canvas.ontouchmove = (e) => {
+            const target = { x: Math.random() * (container.offsetWidth - 60) + 30, y: Math.random() * (container.offsetHeight - 60) + 30 };
+            container.onmousemove = container.ontouchmove = (e) => {
                 if(!gameActive) return;
-                const pos = getMousePos(canvas, e);
-                const d = Math.hypot(pos.x - target.x, pos.y - target.y);
+                const p = getMousePos(container, e);
+                const d = Math.hypot(p.x - target.x, p.y - target.y);
                 const intensity = Math.max(0, 1 - d / 150);
                 container.style.boxShadow = `inset 0 0 ${intensity * 120}px rgba(176, 38, 255, ${intensity})`;
-                if(d < 25) { container.style.boxShadow = "none"; winGame(taskIndex); }
+                if(d < 25) { container.style.boxShadow = "none"; winGame(idx); }
             };
         }
 
-        function startScratchGame(taskIndex) {
+        function startScratchGame(idx) {
             gameActive = true;
             const canvas = document.getElementById('game-canvas');
             const ctx = canvas.getContext('2d');
-            const container = document.getElementById('game-canvas-container');
-            canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
+            canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight;
             ctx.fillStyle = '#999'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            let isDrawing = false;
-            const scratch = (pos) => { ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(pos.x, pos.y, 30, 0, Math.PI * 2); ctx.fill(); };
-            canvas.onmousedown = canvas.ontouchstart = (e) => { isDrawing = true; scratch(getMousePos(canvas, e)); };
-            window.onmousemove = window.ontouchmove = (e) => { if(isDrawing) { scratch(getMousePos(canvas, e)); } };
+            let drawing = false;
+            const scratch = (p) => { ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(p.x, p.y, 30, 0, Math.PI*2); ctx.fill(); };
+            canvas.onmousedown = canvas.ontouchstart = (e) => { drawing = true; scratch(getMousePos(canvas, e)); };
+            window.onmousemove = window.ontouchmove = (e) => { if(drawing) scratch(getMousePos(canvas, e)); };
             window.onmouseup = window.ontouchend = () => { 
-                if(isDrawing) { 
-                    isDrawing = false; 
-                    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height).data;
-                    let count = 0; for(let i=3; i<imgData.length; i+=4) if(imgData[i] === 0) count++;
-                    if((count / (imgData.length/4)) > 0.6) winGame(taskIndex);
-                } 
+                if(!drawing) return; drawing = false;
+                const pix = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+                let c = 0; for(let i=3; i<pix.length; i+=4) if(pix[i]===0) c++;
+                if((c / (pix.length/4)) > 0.6) winGame(idx);
             };
         }
 
-        async function winGame(idx) {
-            if(!gameActive) return;
-            gameActive = false;
-            boards[currentMode][idx].completed = true;
-            await saveToCloud();
-            openTaskModal(idx);
-        }
-
-        function getMousePos(canvas, e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
+        async function winGame(idx) { gameActive = false; boards[currentMode][idx].completed = true; await saveToCloud(); openTaskModal(idx); }
+        function getMousePos(el, e) { const r = el.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx-r.left, y: cy-r.top }; }
         window.closeTaskModal = () => { gameActive = false; document.getElementById('task-modal').classList.remove('active'); };
 
         // Admin
@@ -501,32 +440,23 @@
         document.getElementById('secret-toggle').onclick = () => { if(++clicks >= 5) toggleAdmin(true); };
         window.toggleAdmin = (s) => { clicks = 0; document.getElementById('admin-modal').classList.toggle('hidden', !s); };
         
-        document.getElementById('new-task-type').onchange = (e) => {
-            document.getElementById('extra-fields-text').classList.toggle('hidden', e.target.value !== 'text');
-            document.getElementById('extra-fields-image').classList.toggle('hidden', e.target.value !== 'game_scratch');
-        };
-
         window.renderAdminTaskList = () => {
             const l = document.getElementById('admin-task-list'); l.innerHTML = '';
-            ['romance', 'naughty'].forEach(m => {
-                if(!boards[m]) return;
-                boards[m].forEach((t, i) => {
-                    const item = document.createElement('div');
-                    item.style = "background:#222; padding:12px; margin-bottom:10px; font-size:0.75rem; border-radius:12px; display:flex; justify-content:space-between; align-items:center;";
-                    item.innerHTML = `<div>${m.toUpperCase()} | ${t.time} | ${t.title}</div><button onclick="delTask('${m}', ${i})" style="width:auto; padding:5px 10px; margin:0;">DEL</button>`;
-                    l.appendChild(item);
-                });
-            });
+            ['romance', 'naughty'].forEach(m => boards[m]?.forEach((t, i) => {
+                const item = document.createElement('div');
+                item.style = "background:#222; padding:10px; margin-bottom:5px; font-size:0.7rem; border-radius:8px; display:flex; justify-content:space-between;";
+                item.innerHTML = `<span>${m}: ${t.title}</span><button onclick="delTask('${m}', ${i})" style="width:auto; padding:2px 8px; margin:0;">X</button>`;
+                l.appendChild(item);
+            }));
         };
 
-        window.delTask = async (m, i) => { if(confirm("Delete?")) { boards[m].splice(i, 1); await saveToCloud(); } };
-
+        window.delTask = async (m, i) => { if(confirm("Del?")) { boards[m].splice(i, 1); await saveToCloud(); } };
         document.getElementById('add-task-btn').onclick = async () => {
             const m = document.getElementById('new-task-mode').value;
             boards[m] = boards[m] || [];
             boards[m].push({
                 time: document.getElementById('new-task-time').value || "00:00",
-                title: document.getElementById('new-task-title').value || "New Task",
+                title: document.getElementById('new-task-title').value || "Task",
                 desc: document.getElementById('new-task-desc').value || "",
                 type: document.getElementById('new-task-type').value,
                 question: document.getElementById('new-task-question').value,
@@ -542,9 +472,7 @@
         document.getElementById('login-btn').onclick = () => {
             if(document.getElementById('passcode').value === config.passcode) {
                 isUnlocked = true; sessionStorage.setItem('vday_verified', 'true'); showAgenda();
-            } else {
-                alert("Incorrect year!");
-            }
+            } else alert("Incorrect year!");
         };
 
         window.onload = init;
