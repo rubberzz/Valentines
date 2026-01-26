@@ -210,18 +210,17 @@
             max-width: 900px;
             background: #000;
             position: relative;
+            display: flex;
+            justify-content: center;
         }
-        .video-wrapper { position: relative; width: 100%; padding-top: 56.25%; }
-        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .video-overlay-ui {
-            position: absolute;
-            bottom: 40px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            z-index: 10;
+        .video-container video {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(255, 46, 99, 0.3);
         }
-
+        
         #task-modal, #admin-modal, #game-modal { 
             position: fixed; 
             inset: 0; 
@@ -236,7 +235,7 @@
         .admin-list { max-height: 350px; overflow-y: auto; text-align: left; margin-top: 20px; }
         .admin-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--glass-border); }
         
-        #game-canvas { background: #000; border-radius: 12px; max-width: 100%; cursor: pointer; }
+        #game-canvas { background: #000; border-radius: 12px; max-width: 100%; cursor: crosshair; }
         .hidden { display: none !important; }
         label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; color: var(--accent); opacity: 0.8; }
     </style>
@@ -262,9 +261,10 @@
         <!-- Professional Video Modal -->
         <div id="video-modal">
             <div class="video-container">
-                <div class="video-wrapper">
-                    <iframe id="drive-video-frame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                </div>
+                <video id="local-video" controls playsinline>
+                    <source src="Video.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
             </div>
             <div style="margin-top: 30px; text-align: center;">
                 <h2 style="margin: 0 0 10px;">A special message...</h2>
@@ -383,7 +383,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -397,18 +397,24 @@
         };
 
         const appId = 'vday-prod-v2';
-        const videoId = '1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF';
         let auth, db, user;
         let boards = { romance: [], naughty: [] };
         let config = { passcode: "2017" };
         let currentMode = 'romance';
 
         async function init() {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            await signInAnonymously(auth);
-            onAuthStateChanged(auth, (u) => { if(u) { user = u; syncData(); } });
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                await signInAnonymously(auth);
+                onAuthStateChanged(auth, (u) => { if(u) { user = u; syncData(); } });
+            } catch (err) {
+                console.error("Init Error", err);
+                // Fallback UI for auth failure
+                document.getElementById('loading-text').innerText = "Please enable 'Anonymous' sign-in in Firebase Console.";
+            }
         }
 
         function syncData() {
@@ -472,13 +478,15 @@
         }
 
         window.openVideoModal = () => {
-            const frame = document.getElementById('drive-video-frame');
-            frame.src = `https://drive.google.com/file/d/${videoId}/preview?autoplay=1`;
+            const video = document.getElementById('local-video');
             document.getElementById('video-modal').style.display = 'flex';
+            video.play().catch(e => console.log("Auto-play prevented"));
         };
 
         window.closeVideoModal = () => {
-            document.getElementById('drive-video-frame').src = "";
+            const video = document.getElementById('local-video');
+            video.pause();
+            video.currentTime = 0;
             document.getElementById('video-modal').style.display = 'none';
         };
 
@@ -511,7 +519,7 @@
         window.openModal = (idx) => {
             const t = boards[currentMode][idx];
             const content = document.getElementById('task-modal-content');
-            content.innerHTML = `<h2 style="color:var(--primary);">${t.title}</h2><p>${t.desc}</p>`;
+            content.innerHTML = `<h2 style="color:var(--primary)">${t.title}</h2><p style="line-height:1.5">${t.desc}</p>`;
             
             if(!t.completed) {
                 if(!t.isGame) {
@@ -613,7 +621,6 @@
             
             document.getElementById('save-task-btn').innerText = "Update Task";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            document.querySelector('.admin-glass').scrollTop = 0;
         };
 
         window.cancelEdit = () => {
@@ -640,12 +647,10 @@
 
             if(editVal) {
                 const { mode, index } = JSON.parse(editVal);
-                // Keep completion status if editing
                 newTask.completed = boards[mode][index].completed;
                 if(mode === board) {
                     boards[mode][index] = newTask;
                 } else {
-                    // Moved to different board
                     boards[mode].splice(index, 1);
                     boards[board].push(newTask);
                 }
@@ -729,6 +734,30 @@
                     if(caught >= 10) completeGame(); else gameLoop = requestAnimationFrame(loop);
                 }
                 loop();
+            } else if (type === 'naughty-night') {
+                instructions.innerText = "Pop 10 Emojis!";
+                let popped = 0, targets = [];
+                function spawn() { targets.push({x: 30+Math.random()*290, y: 30+Math.random()*340, life: 60}); }
+                
+                canvas.onclick = (e) => {
+                    targets.forEach((t, i) => {
+                        if(Math.hypot(e.offsetX - t.x, e.offsetY - t.y) < 30) { targets.splice(i, 1); popped++; }
+                    });
+                };
+                
+                function loop() {
+                    ctx.clearRect(0,0,350,400);
+                    if(Math.random()<0.03) spawn();
+                    targets.forEach((t, i) => {
+                        t.life--;
+                        if(t.life <= 0) targets.splice(i, 1);
+                        else { ctx.font = "40px Arial"; ctx.fillText("😈", t.x-20, t.y+15); }
+                    });
+                    ctx.font = "16px Arial"; ctx.fillStyle = "white";
+                    ctx.fillText(`Popped: ${popped}/10`, 10, 30);
+                    if(popped >= 10) completeGame(); else gameLoop = requestAnimationFrame(loop);
+                }
+                loop();
             } else if (type === 'memory') {
                 instructions.innerText = "Find matches!";
                 const sym = ["❤️","🌹","💍","💋"];
@@ -760,30 +789,6 @@
                     if(cards.every(c => c.mat)) completeGame(); else gameLoop = requestAnimationFrame(loop);
                 }
                 loop();
-            } else if (type === 'naughty-night') {
-                instructions.innerText = "Pop 10 Emojis!";
-                let popped = 0, targets = [];
-                function spawn() { targets.push({x: 30+Math.random()*290, y: 30+Math.random()*340, life: 60}); }
-                
-                canvas.onclick = (e) => {
-                    targets.forEach((t, i) => {
-                        if(Math.hypot(e.offsetX - t.x, e.offsetY - t.y) < 30) { targets.splice(i, 1); popped++; }
-                    });
-                };
-                
-                function loop() {
-                    ctx.clearRect(0,0,350,400);
-                    if(Math.random()<0.03) spawn();
-                    targets.forEach((t, i) => {
-                        t.life--;
-                        if(t.life <= 0) targets.splice(i, 1);
-                        else { ctx.font = "40px Arial"; ctx.fillText("😈", t.x-20, t.y+15); }
-                    });
-                    ctx.font = "16px Arial"; ctx.fillStyle = "white";
-                    ctx.fillText(`Popped: ${popped}/10`, 10, 30);
-                    if(popped >= 10) completeGame(); else gameLoop = requestAnimationFrame(loop);
-                }
-                loop();
             }
         };
 
@@ -810,7 +815,7 @@
         document.getElementById('login-btn').onclick = () => {
             const input = document.getElementById('passcode').value;
             if(input === config.passcode) unlockApp(true);
-            else alert("That's not the year we met, my love!");
+            else alert("Wrong year!");
         };
 
         init();
