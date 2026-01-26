@@ -136,6 +136,7 @@
             <div class="interaction-grid" id="interaction-grid"></div>
         </div>
 
+        <!-- Modals for Tasks and Admin remain same as before -->
         <div id="task-modal">
             <div class="task-card glass">
                 <div id="task-modal-content"></div>
@@ -194,9 +195,21 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Your specific Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf3nUe7taCcOLOzc2Rf4taBsMfI2-sFG0",
+            authDomain: "valentines-16b75.firebaseapp.com",
+            projectId: "valentines-16b75",
+            storageBucket: "valentines-16b75.firebasestorage.app",
+            messagingSenderId: "874081783784",
+            appId: "1:874081783784:web:366560e5c9010996e9de5d",
+            measurementId: "G-JKK5Q1GY4X"
+        };
+
+        const appId = 'vday-agenda-v1'; // You can change this ID for different versions
         let auth, db, user;
         let config = { passcode: "2017" };
         let boards = { romance: [], naughty: [] };
@@ -204,45 +217,13 @@
         let isUnlocked = sessionStorage.getItem('vday_verified') === 'true';
         let gameActive = false;
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v2';
-
         async function init() {
-            const loadingText = document.getElementById('loading-text');
-            
-            // Helper to wait for config if environment is slow to inject
-            const getFirebaseConfig = async (retries = 5) => {
-                for (let i = 0; i < retries; i++) {
-                    if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                        return JSON.parse(__firebase_config);
-                    }
-                    loadingText.innerText = `Syncing heart beat... (${i + 1})`;
-                    await new Promise(r => setTimeout(r, 800));
-                }
-                return null;
-            };
-
             try {
-                const firebaseConfig = await getFirebaseConfig();
-                
-                if (!firebaseConfig) {
-                    loadingText.innerText = "Connection lost. Please refresh the page.";
-                    return;
-                }
-
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // RULE 3: Auth Before Queries
-                const performAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                };
-
-                await performAuth();
+                await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, (u) => {
                     if (u) {
@@ -251,14 +232,13 @@
                     }
                 });
             } catch (err) {
-                console.error("Init error", err);
-                loadingText.innerText = "Heart stopped. Refresh to restart.";
+                console.error("Firebase init error", err);
+                document.getElementById('loading-text').innerText = "Database connection error.";
             }
         }
 
         function startSync() {
-            if (!user) return;
-            // RULE 1: Mandatory path
+            // Using a path structure compatible with the rules
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
             
             onSnapshot(docRef, (snap) => {
@@ -274,13 +254,13 @@
                     renderApp();
                     renderAdminTaskList();
                 } else {
-                    // Initialize first-time data
+                    // Seed initial data if it doesn't exist
                     saveToCloud();
                     document.getElementById('login-screen').classList.remove('hidden');
                 }
             }, (err) => {
-                console.error("Sync error", err);
-                document.getElementById('loading-text').innerText = "Access denied. Private connection required.";
+                console.error("Firestore access error", err);
+                document.getElementById('loading-text').innerText = "Permission Denied. Check Firestore Rules.";
             });
         }
 
@@ -290,6 +270,8 @@
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState'), { config, boards });
             } catch (err) { console.error(err); }
         }
+
+        // --- Application Functions ---
 
         function showAgenda() {
             document.getElementById('login-screen').classList.add('hidden');
@@ -384,7 +366,8 @@
             modal.classList.add('active');
         };
 
-        // Mini Games Logic
+        // --- Mini Games ---
+
         function startPenGame(idx) {
             let score = 0; gameActive = true;
             const canvas = document.getElementById('game-canvas');
@@ -452,7 +435,8 @@
         function getMousePos(el, e) { const r = el.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx-r.left, y: cy-r.top }; }
         window.closeTaskModal = () => { gameActive = false; document.getElementById('task-modal').classList.remove('active'); };
 
-        // Admin
+        // --- Admin Controls ---
+
         let clicks = 0;
         document.getElementById('secret-toggle').onclick = () => { if(++clicks >= 5) toggleAdmin(true); };
         window.toggleAdmin = (s) => { clicks = 0; document.getElementById('admin-modal').classList.toggle('hidden', !s); };
@@ -467,7 +451,13 @@
             }));
         };
 
-        window.delTask = async (m, i) => { if(confirm("Del?")) { boards[m].splice(i, 1); await saveToCloud(); } };
+        window.delTask = async (m, i) => { if(confirm("Delete this task?")) { boards[m].splice(i, 1); await saveToCloud(); } };
+        
+        document.getElementById('save-config-btn').onclick = async () => {
+            const yr = document.getElementById('edit-year').value;
+            if(yr) { config.passcode = yr; await saveToCloud(); alert("Passcode updated!"); }
+        };
+
         document.getElementById('add-task-btn').onclick = async () => {
             const m = document.getElementById('new-task-mode').value;
             boards[m] = boards[m] || [];
@@ -484,6 +474,7 @@
                 completed: false
             });
             await saveToCloud();
+            alert("Task added!");
         };
 
         document.getElementById('login-btn').onclick = () => {
@@ -492,7 +483,8 @@
             } else alert("Incorrect year!");
         };
 
-        window.onload = init;
+        // Start initialization
+        init();
     </script>
 </body>
 </html>
