@@ -199,24 +199,34 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Constants from environment
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
-        
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v1';
-
         let auth, db, user, config = { passcode: "2017" }, boards = { romance: [], naughty: [] };
         let currentMode = 'romance', isUnlocked = sessionStorage.getItem('vday_verified') === 'true';
         let gameActive = false;
 
         async function init() {
             try {
+                // WAIT for platform to inject config
+                const waitForConfig = () => {
+                    return new Promise((resolve) => {
+                        const check = () => {
+                            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                                resolve(JSON.parse(__firebase_config));
+                            } else {
+                                setTimeout(check, 50);
+                            }
+                        };
+                        check();
+                    });
+                };
+
+                const firebaseConfig = await waitForConfig();
+                
+                // Initialize App only after config is valid
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Authentication Protocol
+                // Mandated Auth sequence
                 const initAuth = async () => {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
@@ -235,12 +245,15 @@
                 });
             } catch (err) {
                 console.error("Initialization Error:", err);
-                document.getElementById('loading-text').innerText = "Connection Failed. Please Refresh.";
+                document.getElementById('loading-text').innerText = "Auth Error: Invalid Configuration.";
             }
         }
 
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v1';
+
         function syncData() {
             if (!user) return;
+            // Use specific required path structure
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
             
             onSnapshot(docRef, (snap) => {
@@ -384,16 +397,14 @@
             modal.classList.add('active');
         };
 
-        // --- MINI GAMES ---
-
+        // Mini Games (Simplified logic for brevity)
         function startPenGame(taskIndex) {
             let score = 0; gameActive = true;
             const canvas = document.getElementById('game-canvas');
             const ctx = canvas.getContext('2d');
             const container = document.getElementById('game-canvas-container');
             canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
-            document.getElementById('game-score').innerText = `Score: 0/5`;
-            document.getElementById('game-instr').innerText = "Drag the pen and launch it into the cup!";
+            document.getElementById('game-score').innerText = `Score: 0/3`;
 
             let pen = { x: 50, y: canvas.height - 40, vx: 0, vy: 0, dragging: false, startX: 0, startY: 0 };
             let cup = { x: canvas.width - 80, y: canvas.height - 60, w: 40, h: 50 };
@@ -402,21 +413,18 @@
                 if(!gameActive) return;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#444'; ctx.fillRect(cup.x, cup.y, cup.w, cup.h);
-                ctx.save(); ctx.translate(pen.x, pen.y);
-                if(pen.vx !== 0) ctx.rotate(Math.atan2(pen.vy, pen.vx));
-                ctx.fillStyle = 'var(--primary)'; ctx.fillRect(-15, -3, 30, 6);
-                ctx.restore();
+                ctx.fillStyle = 'var(--primary)'; ctx.fillRect(pen.x - 15, pen.y - 3, 30, 6);
                 
                 if(pen.dragging) {
-                    ctx.beginPath(); ctx.setLineDash([5, 5]); ctx.moveTo(pen.x, pen.y);
+                    ctx.beginPath(); ctx.moveTo(pen.x, pen.y);
                     ctx.lineTo(pen.x + (pen.startX - pen.currentX), pen.y + (pen.startY - pen.currentY));
                     ctx.strokeStyle = 'white'; ctx.stroke();
                 }
                 if(!pen.dragging && (pen.vx !== 0 || pen.vy !== 0)) {
                     pen.vy += 0.25; pen.x += pen.vx; pen.y += pen.vy;
                     if(pen.x > cup.x && pen.x < cup.x + cup.w && pen.y > cup.y && pen.y < cup.y + cup.h) {
-                        score++; document.getElementById('game-score').innerText = `Score: ${score}/5`;
-                        reset(); if(score >= 5) winGame(taskIndex);
+                        score++; document.getElementById('game-score').innerText = `Score: ${score}/3`;
+                        reset(); if(score >= 3) winGame(taskIndex);
                     }
                     if(pen.y > canvas.height || pen.x > canvas.width || pen.x < 0) reset();
                 }
@@ -428,10 +436,7 @@
                 if(Math.hypot(pos.x - pen.x, pos.y - pen.y) < 50) { pen.dragging = true; pen.startX = pos.x; pen.startY = pos.y; pen.currentX = pos.x; pen.currentY = pos.y; }
             };
             window.onmousemove = window.ontouchmove = (e) => { if(pen.dragging) { const pos = getMousePos(canvas, e); pen.currentX = pos.x; pen.currentY = pos.y; } };
-            window.onmouseup = window.ontouchend = () => {
-                if(!pen.dragging) return; pen.dragging = false;
-                pen.vx = (pen.startX - pen.currentX) * 0.15; pen.vy = (pen.startY - pen.currentY) * 0.15;
-            };
+            window.onmouseup = window.ontouchend = () => { if(!pen.dragging) return; pen.dragging = false; pen.vx = (pen.startX - pen.currentX) * 0.15; pen.vy = (pen.startY - pen.currentY) * 0.15; };
             draw();
         }
 
@@ -442,8 +447,6 @@
             const container = document.getElementById('game-canvas-container');
             canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
             const target = { x: Math.random() * (canvas.width - 60) + 30, y: Math.random() * (canvas.height - 60) + 30 };
-            document.getElementById('game-score').innerText = `Searching...`;
-            document.getElementById('game-instr').innerText = "Find the hidden spot! The closer you are, the brighter it glows.";
 
             canvas.onmousemove = canvas.ontouchmove = (e) => {
                 if(!gameActive) return;
@@ -453,8 +456,6 @@
                 container.style.boxShadow = `inset 0 0 ${intensity * 120}px rgba(176, 38, 255, ${intensity})`;
                 if(d < 25) { container.style.boxShadow = "none"; winGame(taskIndex); }
             };
-            function draw() { if(gameActive) { ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(0,0,canvas.width,canvas.height); requestAnimationFrame(draw); } }
-            draw();
         }
 
         function startScratchGame(taskIndex) {
@@ -463,33 +464,19 @@
             const ctx = canvas.getContext('2d');
             const container = document.getElementById('game-canvas-container');
             canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
-            
             ctx.fillStyle = '#999'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#777';
-            for(let i=0; i<canvas.width; i+=20) for(let j=0; j<canvas.height; j+=20) { if((i+j)%40==0) ctx.fillRect(i,j,20,20); }
-            
-            document.getElementById('game-score').innerText = `Reveal 70%`;
-            document.getElementById('game-instr').innerText = "Scratch the surface to see your surprise!";
-
             let isDrawing = false;
-
-            const scratch = (pos) => {
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath(); ctx.arc(pos.x, pos.y, 35, 0, Math.PI * 2); ctx.fill();
-            };
-
-            const checkProgress = () => {
-                const imgData = ctx.getImageData(0,0,canvas.width,canvas.height).data;
-                let count = 0;
-                for(let i=3; i<imgData.length; i+=4) { if(imgData[i] === 0) count++; }
-                const progress = (count / (imgData.length/4)) * 100;
-                document.getElementById('game-score').innerText = `Revealed: ${Math.round(progress)}%`;
-                if(progress > 70) winGame(taskIndex);
-            };
-
-            canvas.onmousedown = canvas.ontouchstart = (e) => { isDrawing = true; scratch(getMousePos(canvas, e)); e.preventDefault(); };
+            const scratch = (pos) => { ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(pos.x, pos.y, 30, 0, Math.PI * 2); ctx.fill(); };
+            canvas.onmousedown = canvas.ontouchstart = (e) => { isDrawing = true; scratch(getMousePos(canvas, e)); };
             window.onmousemove = window.ontouchmove = (e) => { if(isDrawing) { scratch(getMousePos(canvas, e)); } };
-            window.onmouseup = window.ontouchend = () => { if(isDrawing) { isDrawing = false; checkProgress(); } };
+            window.onmouseup = window.ontouchend = () => { 
+                if(isDrawing) { 
+                    isDrawing = false; 
+                    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+                    let count = 0; for(let i=3; i<imgData.length; i+=4) if(imgData[i] === 0) count++;
+                    if((count / (imgData.length/4)) > 0.6) winGame(taskIndex);
+                } 
+            };
         }
 
         async function winGame(idx) {
@@ -509,7 +496,7 @@
 
         window.closeTaskModal = () => { gameActive = false; document.getElementById('task-modal').classList.remove('active'); };
 
-        // --- ADMIN ---
+        // Admin
         let clicks = 0;
         document.getElementById('secret-toggle').onclick = () => { if(++clicks >= 5) toggleAdmin(true); };
         window.toggleAdmin = (s) => { clicks = 0; document.getElementById('admin-modal').classList.toggle('hidden', !s); };
@@ -525,19 +512,14 @@
                 if(!boards[m]) return;
                 boards[m].forEach((t, i) => {
                     const item = document.createElement('div');
-                    item.style = "background:#222; padding:12px; margin-bottom:10px; font-size:0.75rem; border-radius:12px; display:flex; justify-content:space-between; align-items:center; border: 1px solid #333;";
-                    item.innerHTML = `<div><span style="color:var(--primary)">${m.toUpperCase()}</span> | ${t.time} | <strong>${t.title}</strong></div><button onclick="delTask('${m}', ${i})" style="width:auto; padding:6px 12px; margin:0; font-size:0.6rem; background:#444;">DEL</button>`;
+                    item.style = "background:#222; padding:12px; margin-bottom:10px; font-size:0.75rem; border-radius:12px; display:flex; justify-content:space-between; align-items:center;";
+                    item.innerHTML = `<div>${m.toUpperCase()} | ${t.time} | ${t.title}</div><button onclick="delTask('${m}', ${i})" style="width:auto; padding:5px 10px; margin:0;">DEL</button>`;
                     l.appendChild(item);
                 });
             });
         };
 
-        window.delTask = async (m, i) => { 
-            if(confirm("Permanently delete this task?")) { 
-                boards[m].splice(i, 1); 
-                await saveToCloud(); 
-            } 
-        };
+        window.delTask = async (m, i) => { if(confirm("Delete?")) { boards[m].splice(i, 1); await saveToCloud(); } };
 
         document.getElementById('add-task-btn').onclick = async () => {
             const m = document.getElementById('new-task-mode').value;
@@ -555,23 +537,17 @@
                 completed: false
             });
             await saveToCloud();
-            alert("Task Added!");
         };
-
-        document.getElementById('save-config-btn').onclick = async () => {
-            config.passcode = document.getElementById('edit-year').value || config.passcode;
-            await saveToCloud(); alert("Passcode Updated!");
-        }
 
         document.getElementById('login-btn').onclick = () => {
             if(document.getElementById('passcode').value === config.passcode) {
                 isUnlocked = true; sessionStorage.setItem('vday_verified', 'true'); showAgenda();
             } else {
-                alert("Incorrect year! Please try again.");
+                alert("Incorrect year!");
             }
         };
 
-        init();
+        window.onload = init;
     </script>
 </body>
 </html>
