@@ -40,7 +40,7 @@
             align-items: flex-start;
             min-height: 100vh;
             overflow-x: hidden;
-            transition: background-image 0.8s ease;
+            transition: background 0.8s ease;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -50,6 +50,29 @@
             padding: 20px 16px;
             text-align: center;
             z-index: 10;
+        }
+
+        /* Floating Decorations */
+        .floating-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        .floater {
+            position: absolute;
+            bottom: -50px;
+            opacity: 0.6;
+            animation: float-up var(--duration) linear infinite;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
         }
 
         .glass {
@@ -93,6 +116,8 @@
             margin: 10px auto 25px;
             width: fit-content;
             border: 1px solid var(--glass-border);
+            position: relative;
+            z-index: 20;
         }
 
         .toggle-btn {
@@ -191,8 +216,6 @@
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        #task-modal.active .task-card { transform: translateY(0); }
-
         .question-box {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
@@ -237,24 +260,23 @@
 <body>
 
     <div id="app">
-        <!-- Loading -->
+        <div id="floating-elements" class="floating-container"></div>
+
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
             <p>Gathering butterflies...</p>
         </div>
 
-        <!-- Verification / Login -->
         <div id="login-screen" class="overlay-screen hidden">
             <div class="heart-icon">❤️</div>
             <h1 style="font-size: 1.4rem">Identity Check</h1>
-            <p id="welcome-txt" style="color: #888; margin-bottom: 24px;">Enter the year we first met:</p>
+            <p style="color: #888; margin-bottom: 24px;">Enter the year we first met:</p>
             <input type="number" id="passcode" placeholder="YYYY" inputmode="numeric" style="text-align:center; font-size: 1.2rem; letter-spacing: 4px; max-width: 250px;">
             <button id="login-btn" style="max-width: 250px">Open My Heart</button>
         </div>
 
-        <!-- Main Agenda UI -->
         <div id="main-content" class="hidden">
-            <h1 style="font-size: 1.4rem; margin-bottom: 8px;">
+            <h1 style="font-size: 1.4rem; margin-bottom: 8px; position: relative; z-index: 15;">
                 Valentine's Agenda
                 <span id="secret-toggle" style="cursor:pointer;">❤️</span>
             </h1>
@@ -278,7 +300,6 @@
             <div class="interaction-grid" id="interaction-grid"></div>
         </div>
 
-        <!-- Task Detail Modal -->
         <div id="task-modal" onclick="closeTaskModal(event)">
             <div class="task-card glass" onclick="event.stopPropagation()">
                 <div id="task-modal-content"></div>
@@ -286,7 +307,6 @@
             </div>
         </div>
 
-        <!-- Admin Modal -->
         <div id="admin-modal" class="hidden">
             <div class="admin-card">
                 <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -295,7 +315,6 @@
                 </div>
                 
                 <div style="background:rgba(255,255,255,0.02); padding: 18px; border-radius: 20px; margin-bottom: 24px;">
-                    <p style="font-size:0.75rem; margin-top:0;">Main Verification Code (Year)</p>
                     <input type="number" id="edit-year" placeholder="Passcode Year">
                     <button id="save-config-btn" style="height:44px; font-size: 0.9rem;">Update Passcode</button>
                 </div>
@@ -312,13 +331,12 @@
                     <textarea id="new-task-desc" placeholder="Instructions..." rows="2"></textarea>
                     
                     <div style="border: 1px solid #333; padding: 12px; border-radius: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.2);">
-                        <p style="font-size: 0.7rem; color: var(--accent); margin-top: 0;">Task Verification (Optional)</p>
                         <input type="text" id="new-task-question" placeholder="Question">
                         <input type="text" id="new-task-answer" placeholder="Answer">
-                        <input type="text" id="new-task-hint" placeholder="Hint (Show if wrong)">
+                        <input type="text" id="new-task-hint" placeholder="Hint">
                     </div>
 
-                    <input type="text" id="new-task-clue" placeholder="Secret Clue (Shown on complete)">
+                    <input type="text" id="new-task-clue" placeholder="Secret Clue">
                     
                     <div style="display:flex; gap: 8px;">
                         <button id="add-task-btn" style="background:#2ecc71; height:44px;">Save Task</button>
@@ -363,10 +381,7 @@
             db = getFirestore(app);
             
             onAuthStateChanged(auth, (u) => { 
-                if (u) { 
-                    user = u; 
-                    syncData(); 
-                } 
+                if (u) { user = u; syncData(); } 
             });
 
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -384,12 +399,8 @@
                     const data = snap.data();
                     config = data.config || config;
                     boards = data.boards || boards;
-                    
-                    if (isUnlocked) {
-                        showAgenda();
-                    } else {
-                        document.getElementById('login-screen').classList.remove('hidden');
-                    }
+                    if (isUnlocked) showAgenda();
+                    else document.getElementById('login-screen').classList.remove('hidden');
                     renderApp();
                     renderAdminTaskList();
                 } else {
@@ -407,6 +418,23 @@
         function showAgenda() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
+            initFloatingDecor();
+        }
+
+        function initFloatingDecor() {
+            const container = document.getElementById('floating-elements');
+            container.innerHTML = '';
+            const char = currentMode === 'romance' ? '❤️' : '😈';
+            for(let i = 0; i < 15; i++) {
+                const el = document.createElement('div');
+                el.className = 'floater';
+                el.innerText = char;
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                el.style.setProperty('--duration', (Math.random() * 5 + 5) + 's');
+                el.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(el);
+            }
         }
 
         window.checkPasscode = () => {
@@ -415,9 +443,7 @@
                 isUnlocked = true;
                 sessionStorage.setItem('vday_verified', 'true');
                 showAgenda();
-            } else {
-                alert("That's not it! Think back to our beginnings...");
-            }
+            } else alert("That's not it! Think back...");
         };
 
         window.switchMode = (mode) => {
@@ -425,6 +451,7 @@
             document.body.className = mode === 'naughty' ? 'naughty-mode' : '';
             document.getElementById('toggle-romance').classList.toggle('active', mode === 'romance');
             document.getElementById('toggle-naughty').classList.toggle('active', mode === 'naughty');
+            initFloatingDecor();
             renderApp();
         };
 
@@ -463,7 +490,6 @@
                     <span style="color: var(--primary); font-weight: 800; font-size: 0.7rem;">${t.time}</span>
                     <h2 style="margin: 10px 0 15px;">${t.title}</h2>
                     <p style="color: #ccc; line-height: 1.6;">${t.desc}</p>
-                    
                     ${!t.completed ? `
                         ${hasQuestion ? `
                             <div class="question-box">
@@ -480,7 +506,6 @@
                     `}
                 </div>
             `;
-            
             const btn = document.getElementById('complete-btn');
             if(btn) btn.onclick = async () => {
                 if(hasQuestion) {
@@ -499,8 +524,6 @@
         };
 
         window.closeTaskModal = () => document.getElementById('task-modal').classList.remove('active');
-
-        // Admin
         let clicks = 0;
         document.getElementById('secret-toggle').onclick = () => { if(++clicks >= 5) toggleAdmin(true); };
         window.toggleAdmin = (s) => document.getElementById('admin-modal').classList.toggle('hidden', !s);
@@ -524,10 +547,7 @@
         };
 
         window.delTask = async (m, i) => {
-            if(confirm("Delete task?")) {
-                boards[m].splice(i, 1);
-                await saveToCloud();
-            }
+            if(confirm("Delete task?")) { boards[m].splice(i, 1); await saveToCloud(); }
         };
 
         window.prepEdit = (m, i) => {
