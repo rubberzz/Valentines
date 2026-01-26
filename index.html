@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Valentine's Dual Agenda ❤️</title>
+    <title>Valentine's Agenda ❤️</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
@@ -17,178 +17,145 @@
             --glass-border: rgba(255, 255, 255, 0.12);
             --text: #ffffff;
             --accent: #ff8ca6;
-            --empty: #1a1a1a;
-            --bg-gradient: radial-gradient(circle at 10% 10%, rgba(255, 46, 99, 0.12) 0%, transparent 40%),
-                            radial-gradient(circle at 90% 90%, rgba(255, 46, 99, 0.12) 0%, transparent 40%);
-        }
-
-        body.naughty-mode {
-            --primary: #b026ff;
-            --accent: #e0aaff;
-            --bg-gradient: radial-gradient(circle at 10% 10%, rgba(176, 38, 255, 0.15) 0%, transparent 40%),
-                            radial-gradient(circle at 90% 90%, rgba(176, 38, 255, 0.15) 0%, transparent 40%);
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg);
-            background-image: var(--bg-gradient);
             color: var(--text);
             margin: 0;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
             min-height: 100vh;
             overflow-x: hidden;
-            transition: background 0.8s ease;
-            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Video Background */
+        #video-bg {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            filter: brightness(0.4) saturate(0.8);
+            object-fit: cover;
         }
 
         #app { width: 100%; max-width: 450px; padding: 20px 16px; text-align: center; z-index: 10; }
 
-        .floating-container { position: fixed; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
-        .floater { position: absolute; bottom: -50px; opacity: 0.6; animation: float-up var(--duration) linear infinite; }
-        @keyframes float-up {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.6; }
-            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        .glass { 
+            background: rgba(15, 15, 15, 0.7); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 24px; 
         }
 
-        .glass { background: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; }
-        .overlay-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 24px; }
+        .overlay-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(15px); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 2000; 
+            padding: 30px; 
+        }
 
         .heart-icon { font-size: 3.5rem; color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px var(--primary)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 25px var(--primary)); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-        .mode-toggle { display: flex; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 100px; margin: 10px auto 25px; width: fit-content; border: 1px solid var(--glass-border); position: relative; z-index: 20; }
-        .toggle-btn { padding: 10px 24px; border-radius: 100px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
-        .toggle-btn.active { background: var(--primary); color: white; }
+        input { 
+            background: rgba(255, 255, 255, 0.07); 
+            border: 1px solid var(--glass-border); 
+            color: white; 
+            padding: 16px; 
+            border-radius: 12px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 12px; 
+            font-size: 18px; 
+            text-align: center;
+        }
 
-        input, textarea, select { background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-border); color: white; padding: 14px; border-radius: 12px; width: 100%; box-sizing: border-box; outline: none; margin-bottom: 12px; font-size: 16px; }
-        button { background: var(--primary); color: white; border: none; padding: 16px 32px; border-radius: 16px; font-weight: 600; cursor: pointer; width: 100%; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
-        button:active { transform: scale(0.98); }
+        button { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 16px; 
+            border-radius: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            width: 100%; 
+        }
 
-        .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px; }
-        .task-trigger { padding: 16px; text-align: left; cursor: pointer; transition: 0.3s; border: 1px solid var(--glass-border); border-radius: 20px; min-height: 90px; display: flex; flex-direction: column; justify-content: center; }
-        .task-trigger.locked { opacity: 0.25; filter: grayscale(1); pointer-events: none; }
-        .task-trigger.completed { border-color: var(--primary); background: rgba(255, 46, 99, 0.08); }
-        .task-trigger span { display: block; font-size: 0.65rem; color: var(--accent); font-weight: 800; }
+        .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .task-trigger { 
+            padding: 20px; 
+            text-align: left; 
+            cursor: pointer; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 20px; 
+            transition: 0.3s;
+        }
+        .task-trigger.locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
+        .task-trigger.completed { border-color: var(--primary); background: rgba(255, 46, 99, 0.1); }
 
-        #task-modal { position: fixed; inset: 0; z-index: 2500; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.8); opacity: 0; pointer-events: none; transition: 0.3s; }
-        #task-modal.active { opacity: 1; pointer-events: auto; }
-        .task-card { width: 100%; max-width: 380px; padding: 32px; overflow-y: auto; max-height: 90vh; }
-
-        #game-canvas-container { position: relative; width: 100%; height: 280px; background: #000; border-radius: 16px; overflow: hidden; margin: 15px 0; border: 1px solid var(--glass-border); touch-action: none; }
-        .game-ui { position: absolute; top: 10px; left: 10px; font-size: 0.8rem; color: var(--primary); font-weight: bold; pointer-events: none; text-shadow: 0 0 10px black; }
-        
-        #scratch-image-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-        
-        #admin-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .admin-card { width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; background: #111; border-radius: 32px; padding: 28px; border: 1px solid #333; }
-
-        .visualizer-container { width: 160px; height: 140px; margin: 0 auto 24px; }
-        .heart-segment { fill: var(--empty); transition: fill 0.8s ease; }
-        .heart-segment.filled { fill: var(--primary); }
+        #task-modal { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 2500; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            background: rgba(0,0,0,0.8); 
+        }
 
         .hidden { display: none !important; }
     </style>
 </head>
-<body class="romance-mode">
+<body>
+
+    <!-- Video Background (Replace URL with your hosted video link) -->
+    <video autoplay muted loop id="video-bg" class="hidden">
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-slow-motion-of-falling-rose-petals-on-a-black-background-4148-large.mp4" type="video/mp4">
+    </video>
 
     <div id="app">
-        <div id="floating-elements" class="floating-container"></div>
-
+        <!-- Loading -->
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
-            <p id="loading-text">Waking up the heart...</p>
+            <p>Connecting to our database...</p>
         </div>
 
+        <!-- Login / Identity Check -->
         <div id="login-screen" class="overlay-screen hidden">
             <div class="heart-icon">❤️</div>
-            <h1 style="font-size: 1.4rem">Identity Check</h1>
-            <p style="color: #888; margin-bottom: 24px;">Enter the year we first met:</p>
-            <input type="number" id="passcode" placeholder="YYYY" style="text-align:center; font-size: 1.2rem; max-width: 250px;">
-            <button id="login-btn" style="max-width: 250px">Open My Heart</button>
+            <h1 style="margin-bottom: 10px;">Identity Check</h1>
+            <p style="color: #ccc; margin-bottom: 30px;">"Only my favorite person can enter here."</p>
+            <input type="number" id="passcode" placeholder="What year did we meet?">
+            <button id="login-btn">Verify Identity</button>
         </div>
 
+        <!-- Main Content -->
         <div id="main-content" class="hidden">
-            <h1 style="font-size: 1.4rem; margin-bottom: 8px;">
-                Valentine's Agenda
-                <span id="secret-toggle" style="cursor:pointer; user-select: none;">❤️</span>
-            </h1>
+            <div class="glass" style="padding: 20px; margin-bottom: 20px;">
+                <h1 style="margin:0; font-size: 1.5rem;">Our Valentine's Day ❤️</h1>
+                <p style="opacity: 0.7; font-size: 0.9rem;">The schedule for our special day</p>
+            </div>
             
-            <div class="mode-toggle">
-                <div id="toggle-romance" class="toggle-btn active" onclick="switchMode('romance')">Romance</div>
-                <div id="toggle-naughty" class="toggle-btn" onclick="switchMode('naughty')">Naughty</div>
-            </div>
-
-            <div class="visualizer-container">
-                <svg viewBox="0 0 32 29.6" style="width:100%; height:100%;">
-                    <defs>
-                        <path id="heartPath" d="M23.6,0c-3.4,0-6.4,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,5.4,5,9.6,16,19.2 c11-9.6,16-13.8,16-19.2C32,3.8,28.2,0,23.6,0z"/>
-                        <clipPath id="clipHeart"><use xlink:href="#heartPath"/></clipPath>
-                    </defs>
-                    <g id="heart-dynamic-segments" clip-path="url(#clipHeart)"></g>
-                    <use xlink:href="#heartPath" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.3"/>
-                </svg>
-            </div>
-
             <div class="interaction-grid" id="interaction-grid"></div>
         </div>
 
-        <!-- Modals for Tasks and Admin remain same as before -->
+        <!-- Task Modal -->
         <div id="task-modal">
-            <div class="task-card glass">
+            <div class="glass" style="width: 100%; max-width: 380px; padding: 30px;">
                 <div id="task-modal-content"></div>
-                <div id="game-area" class="hidden">
-                    <div id="game-canvas-container">
-                        <img id="scratch-image-bg" src="" class="hidden">
-                        <canvas id="game-canvas"></canvas>
-                        <div id="game-score" class="game-ui"></div>
-                    </div>
-                    <p id="game-instr" style="font-size: 0.8rem; color: #888;"></p>
-                </div>
-                <button onclick="closeTaskModal()" style="margin-top: 20px; background: rgba(255,255,255,0.05);">Close</button>
-            </div>
-        </div>
-
-        <div id="admin-modal" class="hidden">
-            <div class="admin-card">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                    <h3>Editor Settings</h3>
-                    <span onclick="toggleAdmin(false)" style="cursor:pointer; font-size: 2rem; padding: 10px;">&times;</span>
-                </div>
-                <input type="number" id="edit-year" placeholder="Change Passcode Year">
-                <button id="save-config-btn">Update Passcode</button>
-                <hr style="border:0; border-top: 1px solid #333; margin: 20px 0;">
-                <div id="admin-task-form" style="text-align:left;">
-                    <p style="font-size:0.8rem; opacity:0.6; margin-bottom: 10px;">Add New Task</p>
-                    <select id="new-task-mode"><option value="romance">Romance</option><option value="naughty">Naughty</option></select>
-                    <input type="text" id="new-task-time" placeholder="Time (e.g. 19:00)">
-                    <input type="text" id="new-task-title" placeholder="Short Title">
-                    <textarea id="new-task-desc" placeholder="Instruction/Description"></textarea>
-                    
-                    <select id="new-task-type">
-                        <option value="text">Question & Answer</option>
-                        <option value="game_pen">Game: Pen in Cup</option>
-                        <option value="game_heat">Game: Heat Search</option>
-                        <option value="game_scratch">Game: Scratch & Reveal</option>
-                    </select>
-
-                    <div id="extra-fields-text">
-                        <input type="text" id="new-task-question" placeholder="The Question">
-                        <input type="text" id="new-task-answer" placeholder="The Answer">
-                        <input type="text" id="new-task-hint" placeholder="Hint (optional)">
-                    </div>
-
-                    <div id="extra-fields-image" class="hidden">
-                        <input type="text" id="new-task-img" placeholder="Secret Photo URL">
-                    </div>
-
-                    <input type="text" id="new-task-clue" placeholder="Reward Clue">
-                    <button id="add-task-btn">Add Task</button>
-                </div>
-                <div id="admin-task-list" style="margin-top:20px; text-align:left;"></div>
+                <button onclick="closeModal()" style="margin-top: 20px; background: rgba(255,255,255,0.1);">Close</button>
             </div>
         </div>
     </div>
@@ -196,9 +163,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Your specific Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyAf3nUe7taCcOLOzc2Rf4taBsMfI2-sFG0",
             authDomain: "valentines-16b75.firebaseapp.com",
@@ -209,281 +175,105 @@
             measurementId: "G-JKK5Q1GY4X"
         };
 
-        const appId = 'vday-agenda-v1'; // You can change this ID for different versions
+        const appId = 'vday-prod-v1';
         let auth, db, user;
-        let config = { passcode: "2017" };
         let boards = { romance: [], naughty: [] };
-        let currentMode = 'romance';
-        let isUnlocked = sessionStorage.getItem('vday_verified') === 'true';
-        let gameActive = false;
+        let config = { passcode: "2017" };
 
         async function init() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-                await signInAnonymously(auth);
-
-                onAuthStateChanged(auth, (u) => {
-                    if (u) {
-                        user = u;
-                        startSync();
-                    }
-                });
-            } catch (err) {
-                console.error("Firebase init error", err);
-                document.getElementById('loading-text').innerText = "Database connection error.";
-            }
+            await signInAnonymously(auth);
+            onAuthStateChanged(auth, (u) => { if(u) { user = u; syncData(); } });
         }
 
-        function startSync() {
-            // Using a path structure compatible with the rules
+        function syncData() {
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
-            
             onSnapshot(docRef, (snap) => {
                 document.getElementById('loading-screen').classList.add('hidden');
+                
                 if (snap.exists()) {
                     const data = snap.data();
-                    config = data.config || config;
                     boards = data.boards || boards;
-                    
-                    if (isUnlocked) showAgenda(); 
+                    config = data.config || config;
+                    if(sessionStorage.getItem('vday_auth')) unlockApp();
                     else document.getElementById('login-screen').classList.remove('hidden');
-                    
-                    renderApp();
-                    renderAdminTaskList();
                 } else {
-                    // Seed initial data if it doesn't exist
-                    saveToCloud();
-                    document.getElementById('login-screen').classList.remove('hidden');
+                    seedInitialData(); // Create tasks if database is empty
                 }
-            }, (err) => {
-                console.error("Firestore access error", err);
-                document.getElementById('loading-text').innerText = "Permission Denied. Check Firestore Rules.";
+                renderTasks();
             });
         }
 
-        async function saveToCloud() {
-            if (!user) return;
-            try {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState'), { config, boards });
-            } catch (err) { console.error(err); }
+        async function seedInitialData() {
+            // This fills your NEW database with the tasks you had before
+            const initialBoards = {
+                romance: [
+                    { time: "09:00", title: "Morning Surprise", desc: "Check under your pillow...", completed: false, clue: "The first piece of the puzzle." },
+                    { time: "13:00", title: "Lunch Date", desc: "Wear that dress I like.", completed: false, clue: "The journey continues." },
+                    { time: "19:00", title: "Candlelight Dinner", desc: "A special table for two.", completed: false, clue: "Almost there..." }
+                ],
+                naughty: []
+            };
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState'), { 
+                config: { passcode: "2017" }, 
+                boards: initialBoards 
+            });
         }
 
-        // --- Application Functions ---
-
-        function showAgenda() {
+        function unlockApp() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
-            initFloatingDecor();
+            document.getElementById('video-bg').classList.remove('hidden');
+            sessionStorage.setItem('vday_auth', 'true');
         }
-
-        function initFloatingDecor() {
-            const container = document.getElementById('floating-elements');
-            container.innerHTML = '';
-            const char = currentMode === 'romance' ? '❤️' : '😈';
-            for(let i = 0; i < 12; i++) {
-                const el = document.createElement('div');
-                el.className = 'floater'; el.innerText = char;
-                el.style.left = Math.random() * 100 + 'vw';
-                el.style.fontSize = (Math.random() * 20 + 20) + 'px';
-                el.style.setProperty('--duration', (Math.random() * 5 + 5) + 's');
-                el.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(el);
-            }
-        }
-
-        window.switchMode = (m) => {
-            currentMode = m;
-            document.body.className = m === 'naughty' ? 'naughty-mode' : 'romance-mode';
-            document.getElementById('toggle-romance').classList.toggle('active', m === 'romance');
-            document.getElementById('toggle-naughty').classList.toggle('active', m === 'naughty');
-            initFloatingDecor(); renderApp();
-        };
-
-        function renderApp() {
-            const agenda = boards[currentMode] || [];
-            const container = document.getElementById('heart-dynamic-segments');
-            container.innerHTML = '';
-            const totalTasks = Math.max(agenda.length, 1);
-            const step = 32 / totalTasks;
-            
-            agenda.forEach((t, i) => {
-                const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                r.setAttribute("x", i * step); r.setAttribute("y", 0); r.setAttribute("width", step + 0.1); r.setAttribute("height", 30);
-                r.setAttribute("class", `heart-segment ${t.completed ? 'filled' : ''}`);
-                container.appendChild(r);
-            });
-
-            const grid = document.getElementById('interaction-grid');
-            grid.innerHTML = '';
-            agenda.forEach((t, i) => {
-                const locked = i > 0 && !agenda[i-1].completed;
-                const b = document.createElement('div');
-                b.className = `task-trigger glass ${locked ? 'locked' : ''} ${t.completed ? 'completed' : ''}`;
-                b.innerHTML = `<span>${t.time}</span><strong>${t.title}</strong>`;
-                b.onclick = () => { if(!locked) openTaskModal(i); };
-                grid.appendChild(b);
-            });
-        }
-
-        window.openTaskModal = (index) => {
-            const t = boards[currentMode][index];
-            const modal = document.getElementById('task-modal');
-            const content = document.getElementById('task-modal-content');
-            const gameArea = document.getElementById('game-area');
-            const imgBg = document.getElementById('scratch-image-bg');
-            
-            gameArea.classList.add('hidden');
-            imgBg.classList.add('hidden');
-            
-            content.innerHTML = `<div style="text-align:left;"><span style="color:var(--primary); font-size:0.7rem;">${t.time}</span><h2 style="margin: 5px 0;">${t.title}</h2><p style="font-size: 0.95rem; line-height: 1.5;">${t.desc}</p></div>`;
-            
-            if(!t.completed) {
-                if(t.type === 'game_pen') { gameArea.classList.remove('hidden'); startPenGame(index); }
-                else if(t.type === 'game_heat') { gameArea.classList.remove('hidden'); startHeatGame(index); }
-                else if(t.type === 'game_scratch') { gameArea.classList.remove('hidden'); imgBg.classList.remove('hidden'); imgBg.src = t.img || 'https://via.placeholder.com/400?text=Secret'; startScratchGame(index); }
-                else if(t.question) {
-                    content.innerHTML += `<div class="question-box"><p style="margin:10px 0; color:var(--accent); font-size:0.9rem;">Q: ${t.question}</p><input type="text" id="ans" placeholder="Answer..."><div id="hnt" class="hidden" style="color:#ff8ca6; font-size:0.8rem; margin:5px 0;">Hint: ${t.hint || "..."}</div></div><button id="cmp">Check Answer</button>`;
-                } else { content.innerHTML += `<button id="cmp">Complete Task ❤️</button>`; }
-            } else {
-                content.innerHTML += `<div style="background:rgba(255,46,99,0.1); border:1px dashed var(--primary); padding:18px; border-radius:18px; margin-top:24px; text-align: left;"><strong>CLUE:</strong> ${t.clue || 'N/A'}</div>`;
-            }
-
-            const btn = document.getElementById('cmp');
-            if(btn) btn.onclick = async () => {
-                if(t.question) {
-                    if(document.getElementById('ans').value.trim().toLowerCase() !== t.answer.trim().toLowerCase()) { 
-                        document.getElementById('hnt').classList.remove('hidden'); 
-                        return; 
-                    }
-                }
-                boards[currentMode][index].completed = true;
-                await saveToCloud();
-                openTaskModal(index);
-            };
-            modal.classList.add('active');
-        };
-
-        // --- Mini Games ---
-
-        function startPenGame(idx) {
-            let score = 0; gameActive = true;
-            const canvas = document.getElementById('game-canvas');
-            const ctx = canvas.getContext('2d');
-            const container = document.getElementById('game-canvas-container');
-            canvas.width = container.offsetWidth; canvas.height = container.offsetHeight;
-            let pen = { x: 50, y: canvas.height - 40, vx: 0, vy: 0, dragging: false, startX: 0, startY: 0 };
-            let cup = { x: canvas.width - 80, y: canvas.height - 60, w: 40, h: 50 };
-            function draw() {
-                if(!gameActive) return;
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                ctx.fillStyle = '#444'; ctx.fillRect(cup.x, cup.y, cup.w, cup.h);
-                ctx.fillStyle = 'var(--primary)'; ctx.fillRect(pen.x-15, pen.y-3, 30, 6);
-                if(pen.dragging) {
-                    ctx.beginPath(); ctx.moveTo(pen.x, pen.y); ctx.lineTo(pen.x + (pen.startX - pen.currentX), pen.y + (pen.startY - pen.currentY));
-                    ctx.strokeStyle = 'white'; ctx.stroke();
-                } else if(pen.vx !== 0 || pen.vy !== 0) {
-                    pen.vy += 0.25; pen.x += pen.vx; pen.y += pen.vy;
-                    if(pen.x > cup.x && pen.x < cup.x+cup.w && pen.y > cup.y && pen.y < cup.y+cup.h) { score++; if(score >= 3) winGame(idx); else reset(); }
-                    if(pen.y > canvas.height || pen.x > canvas.width || pen.x < 0) reset();
-                }
-                document.getElementById('game-score').innerText = `Score: ${score}/3`;
-                requestAnimationFrame(draw);
-            }
-            const reset = () => { pen.x = 50; pen.y = canvas.height - 40; pen.vx = 0; pen.vy = 0; };
-            canvas.onmousedown = canvas.ontouchstart = (e) => { const p = getMousePos(canvas, e); if(Math.hypot(p.x-pen.x, p.y-pen.y)<50){pen.dragging=true; pen.startX=p.x; pen.startY=p.y; pen.currentX=p.x; pen.currentY=p.y;}};
-            window.onmousemove = window.ontouchmove = (e) => { if(pen.dragging){ const p = getMousePos(canvas, e); pen.currentX=p.x; pen.currentY=p.y;}};
-            window.onmouseup = window.ontouchend = () => { if(!pen.dragging) return; pen.dragging=false; pen.vx=(pen.startX-pen.currentX)*0.15; pen.vy=(pen.startY-pen.currentY)*0.15; };
-            draw();
-        }
-
-        function startHeatGame(idx) {
-            gameActive = true;
-            const container = document.getElementById('game-canvas-container');
-            const target = { x: Math.random() * (container.offsetWidth - 60) + 30, y: Math.random() * (container.offsetHeight - 60) + 30 };
-            container.onmousemove = container.ontouchmove = (e) => {
-                if(!gameActive) return;
-                const p = getMousePos(container, e);
-                const d = Math.hypot(p.x - target.x, p.y - target.y);
-                const intensity = Math.max(0, 1 - d / 150);
-                container.style.boxShadow = `inset 0 0 ${intensity * 120}px rgba(176, 38, 255, ${intensity})`;
-                if(d < 25) { container.style.boxShadow = "none"; winGame(idx); }
-            };
-        }
-
-        function startScratchGame(idx) {
-            gameActive = true;
-            const canvas = document.getElementById('game-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight;
-            ctx.fillStyle = '#999'; ctx.fillRect(0,0,canvas.width,canvas.height);
-            let drawing = false;
-            const scratch = (p) => { ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(p.x, p.y, 30, 0, Math.PI*2); ctx.fill(); };
-            canvas.onmousedown = canvas.ontouchstart = (e) => { drawing = true; scratch(getMousePos(canvas, e)); };
-            window.onmousemove = window.ontouchmove = (e) => { if(drawing) scratch(getMousePos(canvas, e)); };
-            window.onmouseup = window.ontouchend = () => { 
-                if(!drawing) return; drawing = false;
-                const pix = ctx.getImageData(0,0,canvas.width,canvas.height).data;
-                let c = 0; for(let i=3; i<pix.length; i+=4) if(pix[i]===0) c++;
-                if((c / (pix.length/4)) > 0.6) winGame(idx);
-            };
-        }
-
-        async function winGame(idx) { gameActive = false; boards[currentMode][idx].completed = true; await saveToCloud(); openTaskModal(idx); }
-        function getMousePos(el, e) { const r = el.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx-r.left, y: cy-r.top }; }
-        window.closeTaskModal = () => { gameActive = false; document.getElementById('task-modal').classList.remove('active'); };
-
-        // --- Admin Controls ---
-
-        let clicks = 0;
-        document.getElementById('secret-toggle').onclick = () => { if(++clicks >= 5) toggleAdmin(true); };
-        window.toggleAdmin = (s) => { clicks = 0; document.getElementById('admin-modal').classList.toggle('hidden', !s); };
-        
-        window.renderAdminTaskList = () => {
-            const l = document.getElementById('admin-task-list'); l.innerHTML = '';
-            ['romance', 'naughty'].forEach(m => boards[m]?.forEach((t, i) => {
-                const item = document.createElement('div');
-                item.style = "background:#222; padding:10px; margin-bottom:5px; font-size:0.7rem; border-radius:8px; display:flex; justify-content:space-between;";
-                item.innerHTML = `<span>${m}: ${t.title}</span><button onclick="delTask('${m}', ${i})" style="width:auto; padding:2px 8px; margin:0;">X</button>`;
-                l.appendChild(item);
-            }));
-        };
-
-        window.delTask = async (m, i) => { if(confirm("Delete this task?")) { boards[m].splice(i, 1); await saveToCloud(); } };
-        
-        document.getElementById('save-config-btn').onclick = async () => {
-            const yr = document.getElementById('edit-year').value;
-            if(yr) { config.passcode = yr; await saveToCloud(); alert("Passcode updated!"); }
-        };
-
-        document.getElementById('add-task-btn').onclick = async () => {
-            const m = document.getElementById('new-task-mode').value;
-            boards[m] = boards[m] || [];
-            boards[m].push({
-                time: document.getElementById('new-task-time').value || "00:00",
-                title: document.getElementById('new-task-title').value || "Task",
-                desc: document.getElementById('new-task-desc').value || "",
-                type: document.getElementById('new-task-type').value,
-                question: document.getElementById('new-task-question').value,
-                answer: document.getElementById('new-task-answer').value,
-                hint: document.getElementById('new-task-hint').value,
-                clue: document.getElementById('new-task-clue').value,
-                img: document.getElementById('new-task-img').value,
-                completed: false
-            });
-            await saveToCloud();
-            alert("Task added!");
-        };
 
         document.getElementById('login-btn').onclick = () => {
-            if(document.getElementById('passcode').value === config.passcode) {
-                isUnlocked = true; sessionStorage.setItem('vday_verified', 'true'); showAgenda();
-            } else alert("Incorrect year!");
+            const input = document.getElementById('passcode').value;
+            if(input === config.passcode) {
+                unlockApp();
+            } else {
+                alert("That's not the year we met, my love. Try again!");
+            }
         };
 
-        // Start initialization
+        function renderTasks() {
+            const grid = document.getElementById('interaction-grid');
+            grid.innerHTML = '';
+            boards.romance.forEach((t, i) => {
+                const isLocked = i > 0 && !boards.romance[i-1].completed;
+                const div = document.createElement('div');
+                div.className = `task-trigger glass ${isLocked ? 'locked' : ''} ${t.completed ? 'completed' : ''}`;
+                div.innerHTML = `<span style="color:var(--primary); font-size:0.7rem;">${t.time}</span><br><strong>${t.title}</strong>`;
+                div.onclick = () => { if(!isLocked) openModal(i); };
+                grid.appendChild(div);
+            });
+        }
+
+        window.openModal = (idx) => {
+            const t = boards.romance[idx];
+            const content = document.getElementById('task-modal-content');
+            content.innerHTML = `<h2>${t.title}</h2><p>${t.desc}</p>`;
+            
+            if(!t.completed) {
+                content.innerHTML += `<button id="done-btn" style="margin-top:20px;">I've Done This ❤️</button>`;
+                setTimeout(() => {
+                    document.getElementById('done-btn').onclick = async () => {
+                        boards.romance[idx].completed = true;
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState'), { config, boards });
+                        openModal(idx);
+                    };
+                }, 0);
+            } else {
+                content.innerHTML += `<div style="padding:15px; background:rgba(255,46,99,0.1); border-radius:10px; margin-top:20px;"><strong>Clue:</strong> ${t.clue}</div>`;
+            }
+            document.getElementById('task-modal').style.display = 'flex';
+        };
+
+        window.closeModal = () => { document.getElementById('task-modal').style.display = 'none'; };
+
         init();
     </script>
 </body>
