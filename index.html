@@ -100,7 +100,7 @@
 
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
-            <p id="loading-text">Connecting to Heart...</p>
+            <p id="loading-text">Waking up the heart...</p>
         </div>
 
         <div id="login-screen" class="overlay-screen hidden">
@@ -207,14 +207,28 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v2';
 
         async function init() {
+            const loadingText = document.getElementById('loading-text');
+            
+            // Helper to wait for config if environment is slow to inject
+            const getFirebaseConfig = async (retries = 5) => {
+                for (let i = 0; i < retries; i++) {
+                    if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                        return JSON.parse(__firebase_config);
+                    }
+                    loadingText.innerText = `Syncing heart beat... (${i + 1})`;
+                    await new Promise(r => setTimeout(r, 800));
+                }
+                return null;
+            };
+
             try {
-                // RULE 1: Direct extraction of config
-                if (typeof __firebase_config === 'undefined') {
-                    document.getElementById('loading-text').innerText = "System error: Config missing.";
+                const firebaseConfig = await getFirebaseConfig();
+                
+                if (!firebaseConfig) {
+                    loadingText.innerText = "Connection lost. Please refresh the page.";
                     return;
                 }
 
-                const firebaseConfig = JSON.parse(__firebase_config);
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -238,7 +252,7 @@
                 });
             } catch (err) {
                 console.error("Init error", err);
-                document.getElementById('loading-text').innerText = "Connection failed. Please retry.";
+                loadingText.innerText = "Heart stopped. Refresh to restart.";
             }
         }
 
@@ -253,8 +267,10 @@
                     const data = snap.data();
                     config = data.config || config;
                     boards = data.boards || boards;
+                    
                     if (isUnlocked) showAgenda(); 
                     else document.getElementById('login-screen').classList.remove('hidden');
+                    
                     renderApp();
                     renderAdminTaskList();
                 } else {
@@ -264,7 +280,7 @@
                 }
             }, (err) => {
                 console.error("Sync error", err);
-                document.getElementById('loading-text').innerText = "Access denied.";
+                document.getElementById('loading-text').innerText = "Access denied. Private connection required.";
             });
         }
 
@@ -308,7 +324,8 @@
             const agenda = boards[currentMode] || [];
             const container = document.getElementById('heart-dynamic-segments');
             container.innerHTML = '';
-            const step = 32 / Math.max(agenda.length, 1);
+            const totalTasks = Math.max(agenda.length, 1);
+            const step = 32 / totalTasks;
             
             agenda.forEach((t, i) => {
                 const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
