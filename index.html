@@ -21,13 +21,6 @@
                            radial-gradient(circle at 80% 70%, rgba(255, 46, 99, 0.1) 0%, transparent 50%);
         }
 
-        body.naughty-mode {
-            --primary: #b026ff;
-            --accent: #e0aaff;
-            --bg-gradient: radial-gradient(circle at 20% 30%, rgba(176, 38, 255, 0.18) 0%, transparent 50%),
-                           radial-gradient(circle at 80% 70%, rgba(176, 38, 255, 0.12) 0%, transparent 50%);
-        }
-
         body {
             font-family: 'Inter', -apple-system, system-ui, sans-serif;
             background-color: var(--bg);
@@ -38,11 +31,9 @@
             justify-content: center;
             min-height: 100vh;
             overflow-x: hidden;
-            transition: background 0.8s ease;
         }
 
         #app { width: 100%; max-width: 480px; padding: 20px 16px; text-align: center; z-index: 10; position: relative; }
-        #bg-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
         .glass { 
             background: rgba(20, 20, 20, 0.7); 
@@ -71,11 +62,11 @@
         .jar-liquid {
             position: absolute; bottom: 0; left: 0; width: 100%;
             background: linear-gradient(to top, var(--primary), var(--accent));
-            opacity: 0.3;
+            opacity: 0.6;
             transition: height 1s ease-out;
         }
 
-        input, textarea, select { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: white; padding: 16px; border-radius: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 16px; outline: none; }
+        input { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: white; padding: 16px; border-radius: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 16px; outline: none; }
         button { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; }
         
         .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
@@ -83,28 +74,30 @@
             padding: 20px; text-align: left; cursor: pointer; border-radius: 24px; transition: 0.3s; 
             min-height: 100px; display: flex; flex-direction: column; justify-content: center;
         }
+        .task-trigger.completed {
+            border-color: var(--primary);
+            background: rgba(255, 46, 99, 0.1);
+        }
     </style>
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
-
     <div id="app">
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
-            <p id="loading-msg">Connecting to your heart...</p>
+            <p id="loading-msg">Connecting to our memories...</p>
         </div>
 
         <div id="login-screen" class="overlay-screen hidden">
-            <h1 style="margin-bottom: 10px;">Welcome Back</h1>
-            <p style="color: #888; margin-bottom: 30px;">Verify the secret passcode</p>
-            <input type="password" id="passcode-input" placeholder="Enter Secret Year">
-            <button id="login-btn">Unlock Agenda</button>
+            <h1 style="margin-bottom: 10px;">Verify</h1>
+            <p style="color: #888; margin-bottom: 30px;">Enter the secret passcode</p>
+            <input type="password" id="passcode-input" placeholder="Passcode (e.g. 2017)">
+            <button id="login-btn">Unlock</button>
         </div>
 
         <div id="main-content" class="hidden">
             <div class="glass" style="padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0; font-size: 1.2rem;">Our Valentine's Day</h2>
+                <h2 style="margin: 0; font-size: 1.1rem;">Valentine's Progress</h2>
                 <div id="progress-text" style="font-size: 0.8rem; opacity: 0.7;">0 tasks complete</div>
             </div>
 
@@ -121,30 +114,42 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration provided by user
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf3nUe7taCcOLOzc2Rf4taBsMfI2-sFG0",
+            authDomain: "valentines-16b75.firebaseapp.com",
+            projectId: "valentines-16b75",
+            storageBucket: "valentines-16b75.firebasestorage.app",
+            messagingSenderId: "874081783784",
+            appId: "1:874081783784:web:366560e5c9010996e9de5d",
+            measurementId: "G-JKK5Q1GY4X"
+        };
 
         async function init() {
             const loadingMsg = document.getElementById('loading-msg');
             
             try {
-                if (typeof __firebase_config === 'undefined') {
-                    throw new Error("Missing application configuration.");
-                }
-
-                const config = JSON.parse(__firebase_config);
-                
-                if (!config || !config.apiKey) {
-                    throw new Error("Firebase API Key is missing in configuration.");
-                }
-
-                const app = initializeApp(config);
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
                 const db = getFirestore(app);
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-2024';
+                
+                // Get environment appId or fallback
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'valentines-app-prod';
 
+                // Handle Auth (Rule 3)
                 const initAuth = async () => {
+                    // Try custom token if available, but wrap in try-catch to handle custom-token-mismatch
+                    // which occurs when the token belongs to a different project than the config.
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
+                        try {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } catch (e) {
+                            console.warn("Custom token mismatch or invalid, falling back to anonymous auth.");
+                            await signInAnonymously(auth);
+                        }
                     } else {
                         await signInAnonymously(auth);
                     }
@@ -154,22 +159,19 @@
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        startApp(db, appId, user.uid);
+                        startApp(db, appId);
                     }
                 });
 
             } catch (err) {
-                console.error(err);
+                console.error("Initialization Error:", err);
                 loadingMsg.style.color = "#ff2e63";
-                loadingMsg.innerText = `Error: ${err.message}`;
+                loadingMsg.innerText = `Connection Failed. Check your network.`;
             }
         }
 
-        function startApp(db, appId, userId) {
-            // RULE 1: Specific Paths
-            // Error Fix: Document references must have an even number of segments.
-            // Old Path: artifacts/{appId}/public/data/vday-state (5 segments)
-            // New Path: artifacts/{appId}/public/data/state/vday-state (6 segments)
+        function startApp(db, appId) {
+            // Rule 1: Fixed Path Segments (Even number)
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'state', 'vday-state');
 
             onSnapshot(docRef, (snap) => {
@@ -181,23 +183,28 @@
                     setDoc(docRef, data);
                 }
 
-                renderUI(data, db, docRef);
+                renderUI(data, docRef);
             }, (err) => {
-                console.error("Firestore error:", err);
+                console.error("Firestore Snapshot Error:", err);
             });
 
+            checkLock();
+        }
+
+        function checkLock() {
             if (!sessionStorage.getItem('unlocked')) {
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('login-btn').onclick = () => {
                     const pass = document.getElementById('passcode-input').value;
+                    // Check against passcode
                     if (pass === "2017") {
                         sessionStorage.setItem('unlocked', 'true');
                         document.getElementById('login-screen').classList.add('hidden');
                         document.getElementById('main-content').classList.remove('hidden');
                     } else {
-                        const originalBtnText = document.getElementById('login-btn').innerText;
-                        document.getElementById('login-btn').innerText = "Incorrect!";
-                        setTimeout(() => { document.getElementById('login-btn').innerText = originalBtnText; }, 2000);
+                        const btn = document.getElementById('login-btn');
+                        btn.innerText = "Try Again ❤️";
+                        setTimeout(() => btn.innerText = "Unlock", 2000);
                     }
                 };
             } else {
@@ -205,7 +212,7 @@
             }
         }
 
-        function renderUI(data, db, docRef) {
+        function renderUI(data, docRef) {
             const grid = document.getElementById('interaction-grid');
             grid.innerHTML = '';
             
@@ -215,21 +222,28 @@
                 
                 const card = document.createElement('div');
                 card.className = `task-trigger glass ${task.completed ? 'completed' : ''}`;
-                card.style.opacity = (index > 0 && !data.tasks[index-1].completed) ? '0.4' : '1';
+                
+                // Logic: Only the current task or completed tasks are fully visible
+                const isPreviousCompleted = index === 0 || data.tasks[index - 1].completed;
+                card.style.opacity = isPreviousCompleted ? '1' : '0.3';
+                card.style.cursor = isPreviousCompleted ? 'pointer' : 'not-allowed';
+
                 card.innerHTML = `
-                    <small style="color: var(--primary); font-weight: bold;">${task.time}</small>
-                    <div style="font-weight: 600; margin-top: 5px;">${task.title}</div>
+                    <small style="color: var(--primary); font-weight: bold; font-size: 0.7rem;">${task.time}</small>
+                    <div style="font-weight: 600; margin-top: 5px; font-size: 0.9rem;">${task.title}</div>
+                    ${task.completed ? '<div style="font-size: 0.7rem; margin-top: 8px; color: #ff8ca6;">✅ Completed</div>' : ''}
                 `;
 
                 card.onclick = () => {
-                    if (index > 0 && !data.tasks[index-1].completed) return;
+                    if (!isPreviousCompleted) return;
+                    
                     if (task.completed) {
-                        alert(`Unlocked Reward: ${task.reward}`);
+                        showModal(`Reward: ${task.reward}`);
                     } else {
-                        const confirmTask = confirm(`Finish task: ${task.title}?`);
-                        if (confirmTask) {
-                            data.tasks[index].completed = true;
-                            setDoc(docRef, data);
+                        if (confirm(`Mark "${task.title}" as complete?`)) {
+                            const newTasks = [...data.tasks];
+                            newTasks[index].completed = true;
+                            updateDoc(docRef, { tasks: newTasks });
                         }
                     }
                 };
@@ -238,16 +252,31 @@
 
             const pct = (completedCount / data.tasks.length) * 100;
             document.getElementById('jar-liquid').style.height = `${pct}%`;
-            document.getElementById('progress-text').innerText = `${completedCount} of ${data.tasks.length} tasks complete`;
+            document.getElementById('progress-text').innerText = `${completedCount} of ${data.tasks.length} done`;
+        }
+
+        function showModal(msg) {
+            // Simple replacement for alert()
+            const div = document.createElement('div');
+            div.className = 'overlay-screen';
+            div.style.background = 'rgba(0,0,0,0.85)';
+            div.innerHTML = `
+                <div class="glass" style="padding: 30px; max-width: 80%; text-align: center;">
+                    <p style="font-size: 1.1rem; line-height: 1.5;">${msg}</p>
+                    <button id="close-modal" style="margin-top: 20px;">Sweet!</button>
+                </div>
+            `;
+            document.body.appendChild(div);
+            document.getElementById('close-modal').onclick = () => div.remove();
         }
 
         function getDefaultData() {
             return {
                 tasks: [
-                    { time: "09:00 AM", title: "Morning Kiss & Coffee", completed: false, reward: "A sweet note in your inbox!" },
-                    { time: "12:00 PM", title: "Surprise Lunch Date", completed: false, reward: "Check your messages for the location." },
-                    { time: "04:00 PM", title: "Secret Gift Hunt", completed: false, reward: "Look under the couch cushions!" },
-                    { time: "08:00 PM", title: "Fancy Dinner", completed: false, reward: "Dress up tonight! ❤️" }
+                    { time: "09:00 AM", title: "Morning Surprise", completed: false, reward: "A secret note hidden in your bag!" },
+                    { time: "12:30 PM", title: "Lunch Date", completed: false, reward: "The reservations are at your favorite spot!" },
+                    { time: "05:00 PM", title: "Sunset Walk", completed: false, reward: "I have a tiny gift for this moment." },
+                    { time: "08:00 PM", title: "Valentine's Dinner", completed: false, reward: "A toast to many more years together ❤️" }
                 ]
             };
         }
