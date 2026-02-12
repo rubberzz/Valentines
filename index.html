@@ -121,7 +121,7 @@
     <div id="app">
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
-            <p style="font-weight: 500; letter-spacing: 1px;">Preparing your surprises...</p>
+            <p id="loading-text" style="font-weight: 500; letter-spacing: 1px;">Preparing your surprises...</p>
         </div>
 
         <div id="login-screen" class="overlay-screen hidden">
@@ -239,22 +239,33 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // FIX: Use environment variables to avoid auth/invalid-api-key errors
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "", 
+        // CONFIG RECOVERY: The environment provides variables via global scope.
+        // auth/invalid-api-key happens if apiKey is missing or null.
+        const getFirebaseConfig = () => {
+            try {
+                if (typeof __firebase_config !== 'undefined') {
+                    const parsed = JSON.parse(__firebase_config);
+                    if (parsed && parsed.apiKey) return parsed;
+                }
+            } catch (e) { console.error("Config parse failed", e); }
+            
+            // Fallback provided by prompt instructions
+            return {
+                apiKey: "", // Environment will inject this if missing here
                 authDomain: "valentines-16b75.firebaseapp.com",
                 projectId: "valentines-16b75",
                 storageBucket: "valentines-16b75.firebasestorage.app",
                 messagingSenderId: "874081783784",
                 appId: "1:874081783784:web:366560e5c9010996e9de5d",
             };
+        };
 
+        const configData = getFirebaseConfig();
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v3';
+        
         let auth, db, user;
         let boards = { romance: [], naughty: [] };
-        let config = { passcode: "2017" };
+        let appSettings = { passcode: "2017" };
         let currentMode = 'romance';
 
         // Background Particles
@@ -292,49 +303,66 @@
         }
 
         async function init() {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            // FIX: Prioritize custom token for session management (RULE 3)
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-
-            onAuthStateChanged(auth, (u) => { 
-                if(u) { 
-                    user = u; 
-                    syncData(); 
-                } 
-            });
-            
-            initBG();
-            animateBG();
-            window.addEventListener('resize', initBG);
-
-            document.getElementById('login-btn').onclick = () => {
-                const val = document.getElementById('passcode').value;
-                if(val === config.passcode) {
-                    unlockApp();
-                } else {
-                    const btn = document.getElementById('login-btn');
-                    btn.innerText = "Wrong Code! ❌";
-                    setTimeout(() => btn.innerText = "Open Heart", 1500);
+            try {
+                // Ensure apiKey is strictly a string and not empty to avoid the specific error
+                if (!configData.apiKey && typeof __firebase_config === 'undefined') {
+                    throw new Error("Missing Firebase API Key configuration.");
                 }
-            };
+
+                const app = initializeApp(configData);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Auth logic (RULE 3)
+                const authenticate = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        return await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        return await signInAnonymously(auth);
+                    }
+                };
+
+                await authenticate();
+
+                onAuthStateChanged(auth, (u) => { 
+                    if(u) { 
+                        user = u; 
+                        syncData(); 
+                    } 
+                });
+                
+                initBG();
+                animateBG();
+                window.addEventListener('resize', initBG);
+
+                document.getElementById('login-btn').onclick = () => {
+                    const val = document.getElementById('passcode').value;
+                    if(val === appSettings.passcode) {
+                        unlockApp();
+                    } else {
+                        const btn = document.getElementById('login-btn');
+                        btn.innerText = "Wrong Code! ❌";
+                        setTimeout(() => btn.innerText = "Open Heart", 1500);
+                    }
+                };
+            } catch (err) {
+                console.error("Initialization error:", err);
+                document.getElementById('loading-text').innerHTML = 
+                    `<span style="color:#ff4d4d">Connection Error</span><br><small>${err.message}</small>`;
+            }
         }
 
         function syncData() {
             if (!user) return;
+            // RULE 1: Specific Pathing
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
+            
             onSnapshot(docRef, (snap) => {
                 document.getElementById('loading-screen').classList.add('hidden');
                 if (snap.exists()) {
                     const data = snap.data();
                     boards = data.boards || boards;
-                    config = data.config || config;
+                    appSettings = data.config || appSettings;
                     if(sessionStorage.getItem('vday_unlocked')) unlockApp();
                     else document.getElementById('login-screen').classList.remove('hidden');
                 } else {
@@ -547,12 +575,6 @@
                     });
                 };
                 loop();
-            } else {
-                instr.innerText = "Challenge: Ready to unlock your reward?";
-                ctx.fillStyle = 'white';
-                ctx.font = '16px Inter';
-                ctx.fillText("Special task unlocked!", 100, 180);
-                completeBtn.classList.remove('hidden');
             }
 
             completeBtn.onclick = async () => {
@@ -658,8 +680,9 @@
 
         async function saveBoard(customBoards = null, customConfig = null) {
             if (!user) return;
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState'), { 
-                config: customConfig || config, 
+            const path = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
+            await setDoc(path, { 
+                config: customConfig || appSettings, 
                 boards: customBoards || boards 
             });
         }
