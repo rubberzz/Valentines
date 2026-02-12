@@ -42,7 +42,6 @@
         }
 
         #app { width: 100%; max-width: 480px; padding: 20px 16px; text-align: center; z-index: 10; position: relative; }
-
         #bg-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
         .glass { 
@@ -54,6 +53,12 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
 
+        .overlay-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 40px; }
+        .heart-icon { font-size: 4rem; color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        .hidden { display: none !important; }
+        
         .jar-container { width: 140px; height: 160px; margin: 0 auto 20px; position: relative; perspective: 1000px; }
         .heart-jar {
             width: 100%; height: 100%;
@@ -62,636 +67,190 @@
             position: relative;
             clip-path: path('M70 150 C 70 150 130 110 130 65 C 130 40 110 20 85 20 C 75 20 70 30 70 30 C 70 30 65 20 55 20 C 30 20 10 40 10 65 C 10 110 70 150 70 150 Z');
             overflow: hidden;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
         }
         .jar-liquid {
             position: absolute; bottom: 0; left: 0; width: 100%;
             background: linear-gradient(to top, var(--primary), var(--accent));
             opacity: 0.3;
-            transition: height 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 1;
+            transition: height 1s ease-out;
         }
-        .jar-content {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start;
-            padding: 15px; gap: 4px; z-index: 2;
-        }
-        .jar-item { animation: drop-in 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes drop-in { from { transform: translateY(-120px) scale(0); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-
-        .overlay-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 40px; }
-        .heart-icon { font-size: 4rem; color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px var(--primary)); } 50% { transform: scale(1.15); filter: drop-shadow(0 0 30px var(--primary)); } }
-
-        .mode-toggle { display: flex; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 100px; margin: 20px auto; width: fit-content; border: 1px solid var(--glass-border); }
-        .toggle-btn { padding: 10px 28px; border-radius: 100px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); color: rgba(255,255,255,0.5); }
-        .toggle-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(255, 46, 99, 0.4); }
 
         input, textarea, select { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: white; padding: 16px; border-radius: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 16px; outline: none; }
-        button { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        button:active { transform: scale(0.96); }
-        .btn-small { padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; width: auto; background: var(--glass); }
-        .btn-danger { background: #ff4d4d; }
-
+        button { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; }
+        
         .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
         .task-trigger { 
-            padding: 24px 16px; text-align: left; cursor: pointer; border-radius: 24px; transition: 0.4s; 
-            min-height: 120px; display: flex; flex-direction: column; justify-content: center; position: relative;
-            overflow: hidden;
+            padding: 20px; text-align: left; cursor: pointer; border-radius: 24px; transition: 0.3s; 
+            min-height: 100px; display: flex; flex-direction: column; justify-content: center;
         }
-        .task-trigger:hover { transform: translateY(-5px); border-color: var(--primary); }
-        .task-trigger.locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-        .task-trigger.completed { border-color: var(--primary); background: rgba(255, 46, 99, 0.08); }
-        .badge-tag { position: absolute; top: 12px; right: 12px; font-size: 0.6rem; background: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 800; }
-
-        .modal { position: fixed; inset: 0; z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); }
-        .modal-content { width: 100%; max-width: 400px; padding: 35px; text-align: center; }
-
-        #game-canvas { background: #000; border-radius: 20px; max-width: 100%; cursor: crosshair; touch-action: none; border: 1px solid var(--glass-border); }
-        .hidden { display: none !important; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 15px 0 6px; color: var(--accent); opacity: 0.9; text-align: left; }
-
-        .heart-pulse { animation: pulse 1.5s infinite ease-in-out; }
     </style>
 </head>
-<body class="romance-mode">
+<body>
 
     <canvas id="bg-canvas"></canvas>
 
     <div id="app">
         <div id="loading-screen" class="overlay-screen">
             <div class="heart-icon">❤️</div>
-            <p id="loading-text" style="font-weight: 500; letter-spacing: 1px;">Preparing your surprises...</p>
+            <p id="loading-msg">Connecting to your heart...</p>
         </div>
 
         <div id="login-screen" class="overlay-screen hidden">
-            <div class="heart-icon">❤️</div>
-            <h1 style="margin-bottom: 5px;">Verify Identity</h1>
-            <p style="color: #888; margin-bottom: 30px; font-size: 0.9rem;">"Only my favorite person can enter here."</p>
-            <input type="number" id="passcode" placeholder="What year did we meet?">
-            <button id="login-btn">Open Heart</button>
+            <h1 style="margin-bottom: 10px;">Welcome Back</h1>
+            <p style="color: #888; margin-bottom: 30px;">Verify the secret passcode</p>
+            <input type="password" id="passcode-input" placeholder="Enter Secret Year">
+            <button id="login-btn">Unlock Agenda</button>
         </div>
 
         <div id="main-content" class="hidden">
-            <div class="glass" style="padding: 24px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="text-align: left;">
-                    <h1 style="margin:0; font-size: 1.3rem; letter-spacing: -0.5px;">My Valentine ❤️</h1>
-                    <p id="progress-text" style="margin:0; font-size: 0.75rem; opacity: 0.6; font-weight: 600;">0 tasks completed</p>
-                </div>
-                <span id="admin-trigger" onclick="openAdmin()" style="cursor: pointer; font-size: 1.8rem;" class="heart-pulse">❤️</span>
+            <div class="glass" style="padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 1.2rem;">Our Valentine's Day</h2>
+                <div id="progress-text" style="font-size: 0.8rem; opacity: 0.7;">0 tasks complete</div>
             </div>
 
-            <div class="jar-container" title="Complete tasks to fill my heart!">
+            <div class="jar-container">
                 <div class="heart-jar">
-                    <div id="jar-liquid" class="jar-liquid"></div>
-                    <div id="jar-fill" class="jar-content"></div>
+                    <div id="jar-liquid" class="jar-liquid" style="height: 0%"></div>
                 </div>
             </div>
 
-            <div class="mode-toggle">
-                <div id="toggle-romance" class="toggle-btn active" onclick="switchMode('romance')">Romance</div>
-                <div id="toggle-naughty" class="toggle-btn" onclick="switchMode('naughty')">Naughty</div>
-            </div>
-            
             <div class="interaction-grid" id="interaction-grid"></div>
-        </div>
-
-        <div id="task-modal" class="modal">
-            <div class="glass modal-content">
-                <div id="task-modal-content"></div>
-                <button onclick="closeModal()" style="margin-top: 25px; background: rgba(255,255,255,0.05); color: #aaa;">Close</button>
-            </div>
-        </div>
-
-        <div id="game-modal" class="modal">
-            <div class="glass modal-content" style="max-width: 450px;">
-                <h2 id="game-title" style="margin-top: 0;">Game Time!</h2>
-                <div id="game-container" style="position: relative; line-height: 0;">
-                    <canvas id="game-canvas" width="350" height="400"></canvas>
-                </div>
-                <p id="game-instructions" style="font-size: 0.85rem; margin: 20px 0; color: #ccc; line-height: 1.4;"></p>
-                <button id="game-complete-btn" class="hidden">Claim Your Reward! ✨</button>
-                <button onclick="closeGame()" style="margin-top: 10px; background: rgba(255,255,255,0.05); color: #888;">Quit Game</button>
-            </div>
-        </div>
-
-        <div id="admin-modal" class="modal">
-            <div class="glass modal-content" style="max-height: 90vh; overflow-y: auto; text-align: left;">
-                <h3 style="margin-top: 0;">Agenda Master</h3>
-                <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px;">
-                    <input type="hidden" id="edit-task-idx" value="">
-                    
-                    <label>Category & Schedule</label>
-                    <div style="display: flex; gap: 10px;">
-                        <select id="new-task-board" style="flex: 1.5;">
-                            <option value="romance">Romance ❤️</option>
-                            <option value="naughty">Naughty 😈</option>
-                        </select>
-                        <input type="text" id="new-task-time" placeholder="09:00" style="flex: 1;">
-                    </div>
-
-                    <label>Task Style</label>
-                    <select id="new-task-is-game" onchange="toggleGameOptions()">
-                        <option value="false">Standard Message</option>
-                        <option value="true">Mini-Game Challenge</option>
-                    </select>
-
-                    <label>Title</label>
-                    <input type="text" id="new-task-title" placeholder="What's happening?">
-                    
-                    <label>Description</label>
-                    <textarea id="new-task-desc" placeholder="The sweet details..." rows="3"></textarea>
-                    
-                    <div id="standard-task-options">
-                        <label>Verification Question</label>
-                        <input type="text" id="new-task-question" placeholder="e.g. Did you find it?">
-                        <label>Required Answer</label>
-                        <input type="text" id="new-task-answer" placeholder="e.g. yes">
-                    </div>
-
-                    <div id="game-task-options" class="hidden">
-                        <label>Mini Game Type</label>
-                        <select id="new-task-type">
-                            <option value="bouquet">Bouquet Catcher</option>
-                            <option value="pop">Pop-a-Heart</option>
-                            <option value="memory">Memory Match</option>
-                        </select>
-                    </div>
-
-                    <label>Secret Clue (Reward)</label>
-                    <input type="text" id="new-task-clue" placeholder="Unlocked upon completion">
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button id="save-task-btn" onclick="saveNewTask()" style="background: #2ecc71;">Save Task</button>
-                        <button id="cancel-edit-btn" onclick="cancelEdit()" class="hidden" style="background: #444;">Cancel</button>
-                    </div>
-                </div>
-                
-                <h4 style="margin: 30px 0 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px;">Scheduled Tasks</h4>
-                <div id="admin-list"></div>
-                <button onclick="closeAdmin()" style="margin-top: 30px; background: var(--glass);">Close Panel</button>
-            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // CONFIG RECOVERY: The environment provides variables via global scope.
-        // auth/invalid-api-key happens if apiKey is missing or null.
-        const getFirebaseConfig = () => {
-            try {
-                if (typeof __firebase_config !== 'undefined') {
-                    const parsed = JSON.parse(__firebase_config);
-                    if (parsed && parsed.apiKey) return parsed;
-                }
-            } catch (e) { console.error("Config parse failed", e); }
-            
-            // Fallback provided by prompt instructions
-            return {
-                apiKey: "", // Environment will inject this if missing here
-                authDomain: "valentines-16b75.firebaseapp.com",
-                projectId: "valentines-16b75",
-                storageBucket: "valentines-16b75.firebasestorage.app",
-                messagingSenderId: "874081783784",
-                appId: "1:874081783784:web:366560e5c9010996e9de5d",
-            };
-        };
-
-        const configData = getFirebaseConfig();
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-v3';
-        
-        let auth, db, user;
-        let boards = { romance: [], naughty: [] };
-        let appSettings = { passcode: "2017" };
-        let currentMode = 'romance';
-
-        // Background Particles
-        const bgCanvas = document.getElementById('bg-canvas');
-        const bgCtx = bgCanvas.getContext('2d');
-        let particles = [];
-
-        function initBG() {
-            bgCanvas.width = window.innerWidth;
-            bgCanvas.height = window.innerHeight;
-            particles = [];
-            for(let i=0; i<30; i++) {
-                particles.push({
-                    x: Math.random() * bgCanvas.width,
-                    y: Math.random() * bgCanvas.height,
-                    size: Math.random() * 2 + 1,
-                    speed: Math.random() * 0.5 + 0.2,
-                    opacity: Math.random()
-                });
-            }
-        }
-
-        function animateBG() {
-            bgCtx.clearRect(0,0,bgCanvas.width, bgCanvas.height);
-            const color = currentMode === 'romance' ? '255, 46, 99' : '176, 38, 255';
-            particles.forEach(p => {
-                p.y -= p.speed;
-                if(p.y < -10) p.y = bgCanvas.height + 10;
-                bgCtx.beginPath();
-                bgCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                bgCtx.fillStyle = `rgba(${color}, ${p.opacity})`;
-                bgCtx.fill();
-            });
-            requestAnimationFrame(animateBG);
-        }
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         async function init() {
+            const loadingMsg = document.getElementById('loading-msg');
+            
             try {
-                // Ensure apiKey is strictly a string and not empty to avoid the specific error
-                if (!configData.apiKey && typeof __firebase_config === 'undefined') {
-                    throw new Error("Missing Firebase API Key configuration.");
+                if (typeof __firebase_config === 'undefined') {
+                    throw new Error("Missing application configuration.");
                 }
 
-                const app = initializeApp(configData);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Auth logic (RULE 3)
-                const authenticate = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        return await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        return await signInAnonymously(auth);
-                    }
-                };
-
-                await authenticate();
-
-                onAuthStateChanged(auth, (u) => { 
-                    if(u) { 
-                        user = u; 
-                        syncData(); 
-                    } 
-                });
+                const config = JSON.parse(__firebase_config);
                 
-                initBG();
-                animateBG();
-                window.addEventListener('resize', initBG);
+                if (!config || !config.apiKey) {
+                    throw new Error("Firebase API Key is missing in configuration.");
+                }
 
-                document.getElementById('login-btn').onclick = () => {
-                    const val = document.getElementById('passcode').value;
-                    if(val === appSettings.passcode) {
-                        unlockApp();
+                const app = initializeApp(config);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'vday-agenda-2024';
+
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
-                        const btn = document.getElementById('login-btn');
-                        btn.innerText = "Wrong Code! ❌";
-                        setTimeout(() => btn.innerText = "Open Heart", 1500);
+                        await signInAnonymously(auth);
                     }
                 };
+
+                await initAuth();
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        startApp(db, appId, user.uid);
+                    }
+                });
+
             } catch (err) {
-                console.error("Initialization error:", err);
-                document.getElementById('loading-text').innerHTML = 
-                    `<span style="color:#ff4d4d">Connection Error</span><br><small>${err.message}</small>`;
+                console.error(err);
+                loadingMsg.style.color = "#ff2e63";
+                loadingMsg.innerText = `Error: ${err.message}`;
             }
         }
 
-        function syncData() {
-            if (!user) return;
-            // RULE 1: Specific Pathing
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
-            
+        function startApp(db, appId, userId) {
+            // RULE 1: Specific Paths
+            // Error Fix: Document references must have an even number of segments.
+            // Old Path: artifacts/{appId}/public/data/vday-state (5 segments)
+            // New Path: artifacts/{appId}/public/data/state/vday-state (6 segments)
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'state', 'vday-state');
+
             onSnapshot(docRef, (snap) => {
                 document.getElementById('loading-screen').classList.add('hidden');
-                if (snap.exists()) {
-                    const data = snap.data();
-                    boards = data.boards || boards;
-                    appSettings = data.config || appSettings;
-                    if(sessionStorage.getItem('vday_unlocked')) unlockApp();
-                    else document.getElementById('login-screen').classList.remove('hidden');
-                } else {
-                    seedInitialData();
+                
+                let data = snap.exists() ? snap.data() : getDefaultData();
+                
+                if (!snap.exists()) {
+                    setDoc(docRef, data);
                 }
-                renderTasks();
-                updateJar();
-            }, (error) => {
-                console.error("Firestore sync error:", error);
+
+                renderUI(data, db, docRef);
+            }, (err) => {
+                console.error("Firestore error:", err);
             });
-        }
 
-        async function seedInitialData() {
-            const initialBoards = {
-                romance: [
-                    { time: "09:00", title: "Morning Surprise", desc: "Look under your pillow, my love.", completed: false, question: "Found it?", answer: "yes", clue: "The first piece of the puzzle is yours!", isGame: false },
-                    { time: "11:00", title: "Bouquet Challenge", desc: "Catch as many roses as you can!", completed: false, isGame: true, type: "bouquet", clue: "You're a natural at catching my heart." }
-                ],
-                naughty: [
-                    { time: "21:00", title: "Pop-a-Heart", desc: "Speed is everything tonight...", completed: false, isGame: true, type: "pop", clue: "I've got something special waiting." }
-                ]
-            };
-            await saveBoard(initialBoards, { passcode: "2017" });
-        }
-
-        function unlockApp() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            sessionStorage.setItem('vday_unlocked', 'true');
-        }
-
-        window.switchMode = (m) => {
-            currentMode = m;
-            document.body.className = m === 'naughty' ? 'naughty-mode' : 'romance-mode';
-            document.getElementById('toggle-romance').classList.toggle('active', m === 'romance');
-            document.getElementById('toggle-naughty').classList.toggle('active', m === 'naughty');
-            renderTasks();
-            updateJar();
-        };
-
-        function updateJar() {
-            const fill = document.getElementById('jar-fill');
-            const liquid = document.getElementById('jar-liquid');
-            const progressText = document.getElementById('progress-text');
-            const tasks = boards[currentMode] || [];
-            const completed = tasks.filter(t => t.completed).length;
-            const total = tasks.length || 1;
-            
-            const pct = (completed / total) * 100;
-            progressText.innerText = `${completed} of ${tasks.length} tasks completed`;
-            liquid.style.height = `${pct}%`;
-
-            fill.innerHTML = '';
-            const emoji = currentMode === 'romance' ? '❤️' : '😈';
-            for(let i=0; i<completed; i++) {
-                const span = document.createElement('span');
-                span.className = 'jar-item';
-                span.style.fontSize = tasks.length > 8 ? '18px' : '24px';
-                span.innerText = emoji;
-                fill.appendChild(span);
+            if (!sessionStorage.getItem('unlocked')) {
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('login-btn').onclick = () => {
+                    const pass = document.getElementById('passcode-input').value;
+                    if (pass === "2017") {
+                        sessionStorage.setItem('unlocked', 'true');
+                        document.getElementById('login-screen').classList.add('hidden');
+                        document.getElementById('main-content').classList.remove('hidden');
+                    } else {
+                        const originalBtnText = document.getElementById('login-btn').innerText;
+                        document.getElementById('login-btn').innerText = "Incorrect!";
+                        setTimeout(() => { document.getElementById('login-btn').innerText = originalBtnText; }, 2000);
+                    }
+                };
+            } else {
+                document.getElementById('main-content').classList.remove('hidden');
             }
         }
 
-        function renderTasks() {
+        function renderUI(data, db, docRef) {
             const grid = document.getElementById('interaction-grid');
             grid.innerHTML = '';
-            const tasks = boards[currentMode] || [];
-            tasks.forEach((t, i) => {
-                const locked = i > 0 && !tasks[i-1].completed;
-                const div = document.createElement('div');
-                div.className = `task-trigger glass ${locked ? 'locked' : ''} ${t.completed ? 'completed' : ''}`;
-                div.innerHTML = `
-                    <span class="badge-tag">${t.isGame ? 'CHALLENGE' : 'TASK'}</span>
-                    <span style="color:var(--primary); font-size:0.75rem; font-weight:800; letter-spacing:1px;">${t.time}</span>
-                    <strong style="display:block; margin-top:8px; font-size:1.1rem;">${t.title}</strong>
-                `;
-                div.onclick = () => { if(!locked) openTask(i); };
-                grid.appendChild(div);
-            });
-        }
-
-        window.openTask = (idx) => {
-            const t = boards[currentMode][idx];
-            const content = document.getElementById('task-modal-content');
-            content.innerHTML = `<h2 style="color:var(--primary); margin-top:0;">${t.title}</h2><p style="color:#ccc; font-size:1rem; line-height:1.6;">${t.desc}</p>`;
             
-            if(!t.completed) {
-                if(!t.isGame) {
-                    content.innerHTML += `
-                        <div style="margin-top:25px; text-align:left;">
-                            <label>${t.question || 'Final Step'}</label>
-                            <input type="text" id="task-ans" placeholder="Your answer...">
-                            <button id="verify-task-btn">Submit Proof</button>
-                        </div>
-                    `;
-                    setTimeout(() => {
-                        const btn = document.getElementById('verify-task-btn');
-                        if (btn) btn.onclick = async () => {
-                            const val = document.getElementById('task-ans').value.toLowerCase().trim();
-                            if(val === (t.answer || 'done').toLowerCase()) {
-                                boards[currentMode][idx].completed = true;
-                                await saveBoard();
-                                openTask(idx);
-                            } else {
-                                const original = btn.innerText;
-                                btn.innerText = "Try again, my love! ❌";
-                                setTimeout(() => btn.innerText = original, 1500);
-                            }
-                        };
-                    }, 0);
-                } else {
-                    content.innerHTML += `<button id="start-game-trigger" style="margin-top:25px;">Start Challenge</button>`;
-                    setTimeout(() => {
-                        const btn = document.getElementById('start-game-trigger');
-                        if (btn) btn.onclick = () => {
-                            closeModal();
-                            runGame(t.type, idx);
-                        };
-                    }, 0);
-                }
-            } else {
-                content.innerHTML += `
-                    <div style="padding:20px; background:rgba(255,46,99,0.1); border:1px dashed var(--primary); border-radius:20px; margin-top:25px;">
-                        <span style="font-size:0.7rem; font-weight:900; color:var(--primary); letter-spacing:1px;">REWARD UNLOCKED</span>
-                        <div style="font-size:1.2rem; font-weight:bold; margin-top:8px; color:white;">${t.clue}</div>
-                    </div>
-                `;
-            }
-            document.getElementById('task-modal').style.display = 'flex';
-        };
-
-        window.closeModal = () => document.getElementById('task-modal').style.display = 'none';
-
-        let gameActive = false;
-        let gameRAF;
-        window.runGame = (type, taskIdx) => {
-            gameActive = true;
-            const canvas = document.getElementById('game-canvas');
-            const ctx = canvas.getContext('2d');
-            const instr = document.getElementById('game-instructions');
-            const completeBtn = document.getElementById('game-complete-btn');
-            document.getElementById('game-modal').style.display = 'flex';
-            completeBtn.classList.add('hidden');
-
-            if(type === 'bouquet') {
-                instr.innerText = "Catch 10 falling roses! Slide your finger/mouse to move the basket.";
-                let score = 0;
-                let basket = { x: 150, w: 60, h: 20 };
-                let roses = [];
+            let completedCount = 0;
+            data.tasks.forEach((task, index) => {
+                if (task.completed) completedCount++;
                 
-                function loop() {
-                    if(!gameActive) return;
-                    ctx.clearRect(0,0,350,400);
-                    ctx.fillStyle = '#ff2e63';
-                    ctx.fillRect(basket.x, 370, basket.w, basket.h);
-                    if(Math.random() < 0.03) roses.push({ x: Math.random()*330, y: -20, s: Math.random()*2+2 });
-                    roses.forEach((r, i) => {
-                        r.y += r.s;
-                        ctx.font = '24px serif';
-                        ctx.fillText('🌹', r.x, r.y);
-                        if(r.y > 360 && r.x > basket.x && r.x < basket.x + basket.w) {
-                            roses.splice(i, 1);
-                            score++;
+                const card = document.createElement('div');
+                card.className = `task-trigger glass ${task.completed ? 'completed' : ''}`;
+                card.style.opacity = (index > 0 && !data.tasks[index-1].completed) ? '0.4' : '1';
+                card.innerHTML = `
+                    <small style="color: var(--primary); font-weight: bold;">${task.time}</small>
+                    <div style="font-weight: 600; margin-top: 5px;">${task.title}</div>
+                `;
+
+                card.onclick = () => {
+                    if (index > 0 && !data.tasks[index-1].completed) return;
+                    if (task.completed) {
+                        alert(`Unlocked Reward: ${task.reward}`);
+                    } else {
+                        const confirmTask = confirm(`Finish task: ${task.title}?`);
+                        if (confirmTask) {
+                            data.tasks[index].completed = true;
+                            setDoc(docRef, data);
                         }
-                    });
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 16px Inter';
-                    ctx.fillText(`Caught: ${score}/10`, 20, 30);
-                    if(score >= 10) {
-                        gameActive = false;
-                        completeBtn.classList.remove('hidden');
-                    } else {
-                        gameRAF = requestAnimationFrame(loop);
                     }
-                }
-                canvas.onmousemove = (e) => basket.x = e.offsetX - 30;
-                canvas.ontouchmove = (e) => {
-                    const rect = canvas.getBoundingClientRect();
-                    basket.x = e.touches[0].clientX - rect.left - 30;
                 };
-                loop();
-            } else if(type === 'pop') {
-                instr.innerText = "Pop 15 naughty hearts as fast as you can!";
-                let score = 0;
-                let targets = [];
-                function spawn() { if(targets.length < 3) targets.push({ x: Math.random()*300+20, y: Math.random()*300+40, r: 25, age: 0 }); }
-                function loop() {
-                    if(!gameActive) return;
-                    ctx.clearRect(0,0,350,400);
-                    spawn();
-                    targets.forEach((t, i) => {
-                        t.age++;
-                        ctx.font = '30px serif';
-                        ctx.fillText('😈', t.x - 15, t.y + 10);
-                        if(t.age > 100) targets.splice(i, 1);
-                    });
-                    ctx.fillStyle = 'white';
-                    ctx.fillText(`Popped: ${score}/15`, 20, 30);
-                    if(score >= 15) {
-                        gameActive = false;
-                        completeBtn.classList.remove('hidden');
-                    } else {
-                        gameRAF = requestAnimationFrame(loop);
-                    }
-                }
-                canvas.onclick = (e) => {
-                    targets.forEach((t, i) => {
-                        const dist = Math.hypot(e.offsetX - t.x, e.offsetY - t.y);
-                        if(dist < t.r) { targets.splice(i, 1); score++; }
-                    });
-                };
-                loop();
-            }
-
-            completeBtn.onclick = async () => {
-                boards[currentMode][taskIdx].completed = true;
-                await saveBoard();
-                closeGame();
-                openTask(taskIdx);
-                updateJar();
-            };
-        };
-
-        window.closeGame = () => {
-            gameActive = false;
-            cancelAnimationFrame(gameRAF);
-            document.getElementById('game-modal').style.display = 'none';
-        };
-
-        window.openAdmin = () => { document.getElementById('admin-modal').style.display = 'flex'; renderAdminList(); };
-        window.closeAdmin = () => document.getElementById('admin-modal').style.display = 'none';
-
-        function renderAdminList() {
-            const list = document.getElementById('admin-list');
-            list.innerHTML = '';
-            ['romance', 'naughty'].forEach(mode => {
-                const tasks = boards[mode] || [];
-                if(tasks.length > 0) {
-                    list.innerHTML += `<div style="font-size:0.7rem; color:var(--accent); margin:15px 0 8px; font-weight:900;">${mode.toUpperCase()}</div>`;
-                    tasks.forEach((t, i) => {
-                        const div = document.createElement('div');
-                        div.style = "background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; margin-bottom:8px; border:1px solid var(--glass-border);";
-                        div.innerHTML = `
-                            <div style="font-size:0.7rem; opacity:0.6;">${t.time} • ${t.isGame ? 'Game' : 'Standard'}</div>
-                            <div style="font-weight:bold; margin:3px 0;">${t.title}</div>
-                            <div style="display:flex; gap:6px; margin-top:8px;">
-                                <button class="btn-small" onclick="prepEdit('${mode}', ${i})">Edit</button>
-                                <button class="btn-small btn-danger" onclick="deleteTask('${mode}', ${i})">Delete</button>
-                            </div>
-                        `;
-                        list.appendChild(div);
-                    });
-                }
+                grid.appendChild(card);
             });
+
+            const pct = (completedCount / data.tasks.length) * 100;
+            document.getElementById('jar-liquid').style.height = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${completedCount} of ${data.tasks.length} tasks complete`;
         }
 
-        window.prepEdit = (mode, idx) => {
-            const t = boards[mode][idx];
-            document.getElementById('edit-task-idx').value = JSON.stringify({mode, idx});
-            document.getElementById('new-task-board').value = mode;
-            document.getElementById('new-task-time').value = t.time;
-            document.getElementById('new-task-title').value = t.title;
-            document.getElementById('new-task-desc').value = t.desc;
-            document.getElementById('new-task-is-game').value = t.isGame ? 'true' : 'false';
-            toggleGameOptions();
-            document.getElementById('new-task-type').value = t.type || 'bouquet';
-            document.getElementById('new-task-question').value = t.question || '';
-            document.getElementById('new-task-answer').value = t.answer || '';
-            document.getElementById('new-task-clue').value = t.clue || '';
-            document.getElementById('save-task-btn').innerText = "Update Task";
-            document.getElementById('cancel-edit-btn').classList.remove('hidden');
-        };
-
-        window.cancelEdit = () => {
-            document.getElementById('edit-task-idx').value = "";
-            document.getElementById('save-task-btn').innerText = "Save Task";
-            document.getElementById('cancel-edit-btn').classList.add('hidden');
-            ['new-task-time', 'new-task-title', 'new-task-desc', 'new-task-question', 'new-task-answer', 'new-task-clue'].forEach(id => document.getElementById(id).value = '');
-        };
-
-        window.saveNewTask = async () => {
-            const editStr = document.getElementById('edit-task-idx').value;
-            const targetBoard = document.getElementById('new-task-board').value;
-            const newTask = {
-                time: document.getElementById('new-task-time').value,
-                title: document.getElementById('new-task-title').value,
-                desc: document.getElementById('new-task-desc').value,
-                isGame: document.getElementById('new-task-is-game').value === 'true',
-                type: document.getElementById('new-task-type').value,
-                question: document.getElementById('new-task-question').value,
-                answer: document.getElementById('new-task-answer').value,
-                clue: document.getElementById('new-task-clue').value,
-                completed: false
+        function getDefaultData() {
+            return {
+                tasks: [
+                    { time: "09:00 AM", title: "Morning Kiss & Coffee", completed: false, reward: "A sweet note in your inbox!" },
+                    { time: "12:00 PM", title: "Surprise Lunch Date", completed: false, reward: "Check your messages for the location." },
+                    { time: "04:00 PM", title: "Secret Gift Hunt", completed: false, reward: "Look under the couch cushions!" },
+                    { time: "08:00 PM", title: "Fancy Dinner", completed: false, reward: "Dress up tonight! ❤️" }
+                ]
             };
-            if(editStr) {
-                const {mode, idx} = JSON.parse(editStr);
-                newTask.completed = boards[mode][idx].completed;
-                if(mode === targetBoard) boards[mode][idx] = newTask;
-                else { boards[mode].splice(idx,1); boards[targetBoard].push(newTask); }
-                cancelEdit();
-            } else {
-                boards[targetBoard].push(newTask);
-            }
-            await saveBoard();
-            renderAdminList();
-        };
-
-        window.deleteTask = async (mode, idx) => {
-            if(!confirm("Delete this?")) return;
-            boards[mode].splice(idx, 1);
-            await saveBoard();
-            renderAdminList();
-            updateJar();
-        };
-
-        async function saveBoard(customBoards = null, customConfig = null) {
-            if (!user) return;
-            const path = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'appState');
-            await setDoc(path, { 
-                config: customConfig || appSettings, 
-                boards: customBoards || boards 
-            });
         }
-
-        window.toggleGameOptions = () => {
-            const isGame = document.getElementById('new-task-is-game').value === 'true';
-            document.getElementById('standard-task-options').classList.toggle('hidden', isGame);
-            document.getElementById('game-task-options').classList.toggle('hidden', !isGame);
-        };
 
         window.onload = init;
     </script>
