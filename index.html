@@ -4,346 +4,328 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Valentines Premium</title>
-
-  <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
   <style>
-    * { box-sizing:border-box; }
-
-    body {
-      margin:0;
-      font-family:'Poppins', sans-serif;
-      background: linear-gradient(135deg,#1a001f,#330033);
-      overflow-x:hidden;
-      color:white;
+    :root {
+      --romantic-glow: rgba(255, 77, 166, 0.4);
+      --naughty-glow: rgba(160, 32, 240, 0.5);
     }
 
-    .hidden { display:none; }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family:'Poppins', sans-serif;
+      background: #1a001f;
+      overflow-x:hidden; color:white;
+    }
+    .hidden { display:none !important; }
 
-    /* ===== GLASS EFFECT ===== */
+    /* ===== GLASS UI ===== */
     .glass {
       background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       border: 1px solid rgba(255,255,255,0.15);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       border-radius: 20px;
     }
 
-    /* ===== WELCOME ===== */
+    /* ===== WELCOME SECTION ===== */
     #welcome {
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:30px;
-      background: radial-gradient(circle at top left,#ff4da6,#1a001f);
+      min-height:100vh; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; text-align:center;
+      padding:30px; background: radial-gradient(circle at top left,#ff4da6,#1a001f);
+      position: relative;
     }
-
     #welcome iframe {
-      width:90%;
-      max-width:700px;
-      height:350px;
-      border:none;
-      border-radius:20px;
-      margin:20px 0;
+      width:95%; max-width:700px; height:350px; border:none;
+      border-radius:20px; margin:20px 0; z-index: 20; position: relative;
     }
 
-    button {
-      padding:10px 18px;
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:600;
-      transition:0.3s ease;
+    /* ===== TASK GRID & CARDS ===== */
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px; padding: 20px;
+    }
+    .task-card {
+      padding: 25px; transition: 0.3s ease; position: relative;
+      cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .task-card.locked {
+      opacity: 0.5; filter: grayscale(1) blur(4px); cursor: not-allowed;
+    }
+    .task-card:not(.locked):hover {
+      transform: translateY(-8px);
+      background: rgba(255,255,255,0.15);
+      box-shadow: 0 10px 25px var(--romantic-glow);
+    }
+    
+    #naughty-grid .task-card:not(.locked):hover {
+        box-shadow: 0 10px 25px var(--naughty-glow);
     }
 
-    .btn-romantic {
-      background: linear-gradient(45deg,#ff4da6,#ff80bf);
-      color:white;
-    }
-
-    .btn-romantic:hover {
-      transform:scale(1.05);
-      box-shadow:0 0 15px rgba(255,77,166,0.7);
-    }
-
-    .btn-naughty {
-      background: linear-gradient(45deg,#7a00cc,#cc00ff);
-      color:white;
-    }
-
-    .btn-naughty:hover {
-      transform:scale(1.05);
-      box-shadow:0 0 15px rgba(204,0,255,0.7);
-    }
+    .task-time { font-size: 0.8rem; color: #ff80bf; font-weight: bold; }
 
     /* ===== TABS ===== */
-    .tabs {
-      display:flex;
-      justify-content:center;
-      gap:30px;
-      padding:20px;
-    }
+    .tabs { display:flex; justify-content:center; gap:20px; padding:30px 20px 10px 20px; }
+    .tab { cursor:pointer; padding:10px 25px; border-radius:30px; transition:0.3s; }
+    .tab.active { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); }
 
-    .tab {
-      cursor:pointer;
-      padding:10px 20px;
-      border-radius:30px;
-      transition:0.3s;
-    }
+    /* ===== BUTTONS & INPUTS ===== */
+    button { padding:12px 24px; border:none; border-radius:12px; cursor:pointer; font-weight:600; transition: 0.2s;}
+    .btn-main { background: linear-gradient(45deg,#ff4da6,#ff80bf); color:white; margin-top: 10px;}
+    .btn-main:hover { opacity: 0.9; transform: scale(1.02); }
+    input, textarea, select { width:100%; padding:12px; margin:10px 0; border-radius:10px; border:none; background: rgba(255,255,255,0.1); color: white; outline: none; }
 
-    .tab.active {
-      background: rgba(255,255,255,0.15);
-    }
-
-    /* ===== SECTIONS ===== */
-    .section {
-      min-height:75vh;
-      padding:40px;
-      position:relative;
-    }
-
-    .romantic {
-      background: radial-gradient(circle at bottom right,#ff99cc,#330033);
-    }
-
-    .naughty {
-      background: radial-gradient(circle at top right,#4d004d,#000000);
-    }
-
-    /* Floating Elements */
-    .float {
-      position:absolute;
-      font-size:22px;
-      animation: float 8s linear infinite;
-      opacity:0.7;
-    }
-
-    @keyframes float {
-      from { transform: translateY(100vh); opacity:0; }
-      20% { opacity:1; }
-      to { transform: translateY(-10vh); opacity:0; }
-    }
-
-    /* ===== TASK CARD ===== */
-    .task-card {
-      padding:20px;
-      margin:15px 0;
-      cursor:pointer;
-      transition:0.3s;
-    }
-
-    .task-card:hover {
-      transform:translateY(-5px);
-      box-shadow:0 0 20px rgba(255,255,255,0.2);
-    }
-
-    /* ===== MODAL ===== */
+    /* ===== MODALS (SCHEDULER & TASKS) ===== */
     .modal-overlay {
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.7);
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      z-index:999;
+      position:fixed; inset:0; background:rgba(0,0,0,0.9);
+      display:flex; justify-content:center; align-items:center; z-index:1000;
+      padding: 20px;
     }
+    .modal { width:100%; max-width:500px; padding:30px; position: relative; max-height: 90vh; overflow-y: auto; text-align: center;}
 
-    .modal {
-      width:90%;
-      max-width:420px;
-      padding:25px;
-      position:relative;
+    /* ===== FLOATING EMOJIS ===== */
+    .float {
+      position:absolute; font-size:24px; animation: floatUp 8s linear infinite;
+      opacity:0.5; z-index: 0; pointer-events: none;
     }
+    @keyframes floatUp { from{transform:translateY(100vh);} to{transform:translateY(-10vh);} }
 
-    .close-btn {
-      position:absolute;
-      top:10px;
-      right:15px;
-      background:none;
-      border:none;
-      font-size:20px;
-      color:#ff4d4d;
-      cursor:pointer;
+    .reward-pop {
+      position:fixed; inset:0; display:flex; align-items:center;
+      justify-content:center; font-size:80px; z-index:2000;
+      pointer-events: none; animation: pop 1.2s ease forwards;
     }
-
-    input {
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border-radius:10px;
-      border:none;
-    }
-
-    /* ===== REWARD ===== */
-    .reward {
-      position:fixed;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:70px;
-      z-index:1000;
-      animation: pop 1s ease;
-    }
-
-    @keyframes pop {
-      0% { transform:scale(0); }
-      50% { transform:scale(1.4); }
-      100% { transform:scale(1); }
-    }
-
+    @keyframes pop { 0%{transform:scale(0); opacity:0;} 50%{transform:scale(1.2); opacity:1;} 100%{transform:scale(1); opacity:0;} }
   </style>
 </head>
 <body>
 
-<!-- WELCOME -->
 <div id="welcome">
   <h1>Our Private World ❤️</h1>
   <iframe id="welcomeVideo"></iframe>
-  <label>
-    <input type="checkbox" id="videoCheck"> I’ve watched it 💕
-  </label>
-  <br/><br/>
-  <button class="btn-romantic" onclick="enterApp()">Enter</button>
+  <div class="glass" style="padding:25px; z-index:30; width: 90%; max-width: 400px;">
+    <p>When did we become a couple?</p>
+    <input type="text" id="entryPass" placeholder="Year (YYYY)">
+    <button class="btn-main" onclick="checkEntry()">Unlock Access</button>
+  </div>
 </div>
 
-<!-- MAIN APP -->
 <div id="app" class="hidden">
-
   <div class="tabs">
     <div class="tab active" onclick="showTab('romantic',this)">Romantic</div>
     <div class="tab" onclick="unlockNaughty(this)">Naughty</div>
   </div>
+  <div id="romantic" class="section"><div class="task-grid" id="romantic-grid"></div></div>
+  <div id="naughty" class="section hidden"><div class="task-grid" id="naughty-grid"></div></div>
+</div>
 
-  <div id="romantic" class="section romantic"></div>
-  <div id="naughty" class="section naughty hidden"></div>
-
+<div id="settingsModal" class="modal-overlay hidden">
+  <div class="modal glass">
+    <h2 style="margin-top:0">Admin Scheduler</h2>
+    <div id="fullTaskList" style="text-align:left; margin-bottom:20px; font-size: 0.9rem;"></div>
+    <hr style="opacity:0.2">
+    <h4 style="margin-bottom: 5px;">Add New Task</h4>
+    <select id="newType"><option value="romantic">Romantic</option><option value="naughty">Naughty</option></select>
+    <input type="time" id="newTime">
+    <input type="text" id="newTitle" placeholder="Task Title">
+    <textarea id="newDesc" placeholder="Description/Instruction"></textarea>
+    <input type="text" id="newAnswer" placeholder="The Password/Answer">
+    <input type="text" id="newHint" placeholder="Hint">
+    <input type="text" id="newReward" placeholder="Reward Message">
+    <button class="btn-main" onclick="addTask()">Save Task to Supabase</button>
+    
+    <hr style="opacity:0.2; margin: 20px 0;">
+    <h4>Global Settings</h4>
+    <input type="text" id="setNaughtyCode" placeholder="Naughty Tab Code">
+    <input type="text" id="setVideo" placeholder="Video Link">
+    <button class="btn-main" style="background:rgba(255,255,255,0.1); color: white;" onclick="saveGlobalSettings()">Update Global Config</button>
+    
+    <button onclick="toggleSettings()" style="background:transparent; color:white; margin-top:20px; display: block; width: 100%;">Close Admin Panel</button>
+  </div>
 </div>
 
 <div id="modalContainer" class="hidden"></div>
-<div id="reward" class="reward hidden">💖</div>
+<div id="reward" class="reward-pop hidden">💖</div>
 
-<audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b0b8a.mp3"></audio>
-<audio id="successSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3"></audio>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+// === PASTE YOUR DETAILS HERE ===
+const SUPABASE_URL = 'https://bhwpomuphskyuufgyvte.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_hzqMJqDKYbfRLZqIbKW0aA_iqJ67LMt';
 
-let settings = {
-  naughtyCode:"1234",
-  welcomeVideoLink:"https://drive.google.com/file/d/1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF/preview"
+// Initialize with a unique name
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let config = { naughtyCode: "1234", videoLink: "", entryAnswer: "2017" };
+let tasks = { romantic: [], naughty: [] };
+
+async function loadData() {
+  try {
+    const { data: settingsData } = await supabaseClient.from('settings').select('*').eq('id', 1).single();
+    if (settingsData) {
+      config = {
+        naughtyCode: settingsData.naughty_code,
+        videoLink: settingsData.video_link,
+        entryAnswer: settingsData.entry_answer
+      };
+      document.getElementById('welcomeVideo').src = config.videoLink;
+      document.getElementById('setNaughtyCode').value = config.naughtyCode;
+      document.getElementById('setVideo').value = config.videoLink;
+    }
+
+    const { data: taskData } = await supabaseClient.from('tasks').select('*');
+    if (taskData) {
+      tasks = { romantic: [], naughty: [] };
+      taskData.forEach(t => {
+        tasks[t.section].push({
+          id: t.id,
+          time: t.time_val,
+          title: t.title,
+          desc: t.description,
+          answer: t.answer,
+          hint: t.hint,
+          reward: t.reward_message
+        });
+      });
+      renderTasks();
+    }
+  } catch (err) { console.error(err); }
+}
+
+function checkEntry() {
+  if(document.getElementById('entryPass').value === config.entryAnswer) {
+    document.getElementById('welcome').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    startFloating();
+    loadData();
+  } else alert("Try again...");
+}
+
+function renderTasks() {
+  const now = new Date();
+  const currentHHMM = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+
+  ['romantic', 'naughty'].forEach(cat => {
+    const grid = document.getElementById(cat + '-grid');
+    grid.innerHTML = "";
+    tasks[cat].sort((a,b) => a.time.localeCompare(b.time)).forEach(task => {
+      const isLocked = currentHHMM < task.time;
+      const card = document.createElement('div');
+      card.className = `task-card glass ${isLocked ? 'locked' : ''}`;
+      card.innerHTML = `<span class="task-time">${task.time} ${isLocked ? '🔒' : '🔓'}</span><h3>${task.title}</h3><p>${isLocked ? 'Unlock at ' + task.time : 'Tap to open'}</p>`;
+      if(!isLocked) card.onclick = () => openTask(task);
+      grid.appendChild(card);
+    });
+  });
+}
+
+function openTask(task) {
+  document.getElementById('modalContainer').innerHTML = `
+    <div class="modal-overlay" onclick="this.parentElement.classList.add('hidden')">
+      <div class="modal glass" onclick="event.stopPropagation()">
+        <h3>${task.title}</h3><p>${task.desc}</p>
+        <input id="uAns" placeholder="Answer..."><br>
+        <button class="btn-main" onclick="checkAns('${task.answer}', '${task.reward}')">Submit</button>
+        <button style="background:none; color:pink;" onclick="alert('Hint: ${task.hint}')">Hint</button>
+      </div>
+    </div>`;
+  document.getElementById('modalContainer').classList.remove('hidden');
+}
+
+function checkAns(correct, reward) {
+  if(document.getElementById('uAns').value.toLowerCase().trim() === correct.toLowerCase()) {
+    document.getElementById('reward').classList.remove('hidden');
+    alert(reward);
+    setTimeout(() => document.getElementById('reward').classList.add('hidden'), 1500);
+    document.getElementById('modalContainer').classList.add('hidden');
+  } else alert("Incorrect...");
+}
+
+// Admin Shortcut (sss)
+let sKey = 0;
+window.onkeydown = (e) => { 
+  if(e.key.toLowerCase()==='s') { sKey++; if(sKey===3){ sKey=0; toggleSettings(); } } else sKey=0; 
 };
 
-let tasks = {
-  romantic:[
-    {title:"Whisper something sweet 💌",answer:"love",hints:["4 letters","It’s a feeling"]}
-  ],
-  naughty:[
-    {title:"Say the magic word 😈",answer:"please",hints:["6 letters","Polite and powerful"]}
-  ]
-};
-
-function play(id){ document.getElementById(id).play(); }
-
-function enterApp(){
-  if(!document.getElementById('videoCheck').checked) return;
-  document.getElementById('welcome').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  renderTasks();
-}
-
-function showTab(tab,el){
-  play('clickSound');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('romantic').classList.add('hidden');
-  document.getElementById('naughty').classList.add('hidden');
-  document.getElementById(tab).classList.remove('hidden');
-}
-
-function unlockNaughty(el){
-  let code=prompt("Enter secret code 😈");
-  if(code===settings.naughtyCode){
-    showTab('naughty',el);
-  } else alert("Wrong code...");
-}
-
-function renderTasks(){
-  for(let section in tasks){
-    const container=document.getElementById(section);
-    container.innerHTML="";
-    tasks[section].forEach(task=>{
-      const card=document.createElement('div');
-      card.className="task-card glass";
-      card.innerText=task.title;
-      card.onclick=()=>openTask(task);
-      container.appendChild(card);
+function toggleSettings() {
+  const modal = document.getElementById('settingsModal');
+  modal.classList.toggle('hidden');
+  if(!modal.classList.contains('hidden')) {
+    const list = document.getElementById('fullTaskList');
+    list.innerHTML = "<b>Existing Tasks:</b><br>";
+    ['romantic','naughty'].forEach(cat => {
+      tasks[cat].forEach(t => {
+          list.innerHTML += `<div style="display:flex; justify-content:space-between; margin-top:8px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px;">
+          <span>[${cat.toUpperCase()}] ${t.time} - ${t.title}</span>
+          <button onclick="deleteTask('${t.id}')" style="background:red; color:white; border:none; padding: 2px 8px; border-radius:5px;">Delete</button></div>`;
+      });
     });
   }
 }
 
-function openTask(task){
-  play('clickSound');
-  document.getElementById('modalContainer').innerHTML=`
-  <div class="modal-overlay" onclick="closeModal(event)">
-    <div class="modal glass">
-      <button class="close-btn" onclick="closeModal()">✕</button>
-      <h3>${task.title}</h3>
-      <input id="taskAnswer" placeholder="Your answer"/>
-      <button class="btn-romantic" onclick="checkAnswer('${task.answer}')">Submit</button>
-      <p id="hintText"></p>
-      <button onclick="showHint(${JSON.stringify(task.hints).replace(/"/g,'&quot;')})">Hint</button>
-    </div>
-  </div>`;
-  document.getElementById('modalContainer').classList.remove('hidden');
+async function addTask() {
+  const newTask = {
+    section: document.getElementById('newType').value,
+    time_val: document.getElementById('newTime').value,
+    title: document.getElementById('newTitle').value,
+    description: document.getElementById('newDesc').value,
+    answer: document.getElementById('newAnswer').value,
+    hint: document.getElementById('newHint').value,
+    reward_message: document.getElementById('newReward').value
+  };
+  await supabaseClient.from('tasks').insert([newTask]);
+  loadData();
+  toggleSettings();
 }
 
-let hintIndex=0;
-function showHint(hints){
-  if(hintIndex<hints.length){
-    document.getElementById('hintText').innerText=hints[hintIndex];
-    hintIndex++;
-  }
+async function deleteTask(id) {
+  await supabaseClient.from('tasks').delete().eq('id', id);
+  loadData();
+  toggleSettings();
 }
 
-function checkAnswer(correct){
-  let val=document.getElementById('taskAnswer').value.toLowerCase();
-  if(val===correct){
-    play('successSound');
-    document.getElementById('reward').classList.remove('hidden');
-    setTimeout(()=>document.getElementById('reward').classList.add('hidden'),1000);
-    closeModal();
-  }
+async function saveGlobalSettings() {
+  await supabaseClient.from('settings').update({
+    naughty_code: document.getElementById('setNaughtyCode').value,
+    video_link: document.getElementById('setVideo').value
+  }).eq('id', 1);
+  alert("Settings Synced!");
+  loadData();
 }
 
-function closeModal(e){
-  if(e && e.target!==e.currentTarget) return;
-  document.getElementById('modalContainer').classList.add('hidden');
-  hintIndex=0;
+function showTab(cat, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('romantic').classList.add('hidden');
+  document.getElementById('naughty').classList.add('hidden');
+  document.getElementById(cat).classList.remove('hidden');
 }
 
-function spawn(type,emoji,interval){
-  const container=document.getElementById(type);
-  setInterval(()=>{
-    const el=document.createElement('div');
-    el.className='float';
-    el.style.left=Math.random()*100+'vw';
-    el.textContent=emoji;
-    container.appendChild(el);
-    setTimeout(()=>el.remove(),8000);
-  },interval);
+function unlockNaughty(el) {
+  if(prompt("Naughty Code?") === config.naughtyCode) showTab('naughty', el);
 }
 
-spawn('romantic','❤️',600);
-spawn('naughty','😈',700);
+function startFloating() {
+    setInterval(() => createEmoji('romantic', '❤️'), 1000);
+    setInterval(() => createEmoji('naughty', '😈'), 1200);
+    setInterval(() => createEmoji('naughty', '🍆'), 2000);
+}
 
-document.getElementById('welcomeVideo').src=settings.welcomeVideoLink;
+function createEmoji(sectionId, emoji) {
+    const el = document.createElement('div');
+    el.className = 'float';
+    el.innerText = emoji;
+    el.style.left = Math.random() * 95 + "vw";
+    if(!document.getElementById(sectionId).classList.contains('hidden')) {
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 8000);
+    }
+}
 
+loadData();
 </script>
-
 </body>
 </html>
