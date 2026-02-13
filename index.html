@@ -1,287 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Valentine's Agenda ❤️</title>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valentines Premium</title>
 
-    <style>
-        :root {
-            --primary: #ff2e63;
-            --bg: #0a0a0a;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text: #ffffff;
-            --accent: #ff8ca6;
-            --bg-gradient: radial-gradient(circle at 20% 30%, rgba(255, 46, 99, 0.15) 0%, transparent 50%),
-                           radial-gradient(circle at 80% 70%, rgba(255, 46, 99, 0.1) 0%, transparent 50%);
-        }
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-        body {
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
-            background-color: var(--bg);
-            background-image: var(--bg-gradient);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+  <style>
+    * { box-sizing:border-box; }
 
-        #app { width: 100%; max-width: 480px; padding: 20px 16px; text-align: center; z-index: 10; position: relative; }
+    body {
+      margin:0;
+      font-family:'Poppins', sans-serif;
+      background: linear-gradient(135deg,#1a001f,#330033);
+      overflow-x:hidden;
+      color:white;
+    }
 
-        .glass { 
-            background: rgba(20, 20, 20, 0.7); 
-            backdrop-filter: blur(25px); 
-            -webkit-backdrop-filter: blur(25px); 
-            border: 1px solid var(--glass-border); 
-            border-radius: 28px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
+    .hidden { display:none; }
 
-        .overlay-screen { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 40px; }
-        .heart-icon { font-size: 4rem; color: var(--primary); margin-bottom: 20px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    /* ===== GLASS EFFECT ===== */
+    .glass {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      border-radius: 20px;
+    }
 
-        .hidden { display: none !important; }
-        
-        .jar-container { width: 140px; height: 160px; margin: 0 auto 20px; position: relative; perspective: 1000px; }
-        .heart-jar {
-            width: 100%; height: 100%;
-            background: rgba(255,255,255,0.02);
-            border: 2px solid var(--glass-border);
-            position: relative;
-            clip-path: path('M70 150 C 70 150 130 110 130 65 C 130 40 110 20 85 20 C 75 20 70 30 70 30 C 70 30 65 20 55 20 C 30 20 10 40 10 65 C 10 110 70 150 70 150 Z');
-            overflow: hidden;
-        }
-        .jar-liquid {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            background: linear-gradient(to top, var(--primary), var(--accent));
-            opacity: 0.6;
-            transition: height 1s ease-out;
-        }
+    /* ===== WELCOME ===== */
+    #welcome {
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:30px;
+      background: radial-gradient(circle at top left,#ff4da6,#1a001f);
+    }
 
-        input { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); color: white; padding: 16px; border-radius: 16px; width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 16px; outline: none; }
-        button { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; }
-        
-        .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
-        .task-trigger { 
-            padding: 20px; text-align: left; cursor: pointer; border-radius: 24px; transition: 0.3s; 
-            min-height: 100px; display: flex; flex-direction: column; justify-content: center;
-        }
-        .task-trigger.completed {
-            border-color: var(--primary);
-            background: rgba(255, 46, 99, 0.1);
-        }
-    </style>
+    #welcome iframe {
+      width:90%;
+      max-width:700px;
+      height:350px;
+      border:none;
+      border-radius:20px;
+      margin:20px 0;
+    }
+
+    button {
+      padding:10px 18px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      transition:0.3s ease;
+    }
+
+    .btn-romantic {
+      background: linear-gradient(45deg,#ff4da6,#ff80bf);
+      color:white;
+    }
+
+    .btn-romantic:hover {
+      transform:scale(1.05);
+      box-shadow:0 0 15px rgba(255,77,166,0.7);
+    }
+
+    .btn-naughty {
+      background: linear-gradient(45deg,#7a00cc,#cc00ff);
+      color:white;
+    }
+
+    .btn-naughty:hover {
+      transform:scale(1.05);
+      box-shadow:0 0 15px rgba(204,0,255,0.7);
+    }
+
+    /* ===== TABS ===== */
+    .tabs {
+      display:flex;
+      justify-content:center;
+      gap:30px;
+      padding:20px;
+    }
+
+    .tab {
+      cursor:pointer;
+      padding:10px 20px;
+      border-radius:30px;
+      transition:0.3s;
+    }
+
+    .tab.active {
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* ===== SECTIONS ===== */
+    .section {
+      min-height:75vh;
+      padding:40px;
+      position:relative;
+    }
+
+    .romantic {
+      background: radial-gradient(circle at bottom right,#ff99cc,#330033);
+    }
+
+    .naughty {
+      background: radial-gradient(circle at top right,#4d004d,#000000);
+    }
+
+    /* Floating Elements */
+    .float {
+      position:absolute;
+      font-size:22px;
+      animation: float 8s linear infinite;
+      opacity:0.7;
+    }
+
+    @keyframes float {
+      from { transform: translateY(100vh); opacity:0; }
+      20% { opacity:1; }
+      to { transform: translateY(-10vh); opacity:0; }
+    }
+
+    /* ===== TASK CARD ===== */
+    .task-card {
+      padding:20px;
+      margin:15px 0;
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    .task-card:hover {
+      transform:translateY(-5px);
+      box-shadow:0 0 20px rgba(255,255,255,0.2);
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.7);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:999;
+    }
+
+    .modal {
+      width:90%;
+      max-width:420px;
+      padding:25px;
+      position:relative;
+    }
+
+    .close-btn {
+      position:absolute;
+      top:10px;
+      right:15px;
+      background:none;
+      border:none;
+      font-size:20px;
+      color:#ff4d4d;
+      cursor:pointer;
+    }
+
+    input {
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border-radius:10px;
+      border:none;
+    }
+
+    /* ===== REWARD ===== */
+    .reward {
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:70px;
+      z-index:1000;
+      animation: pop 1s ease;
+    }
+
+    @keyframes pop {
+      0% { transform:scale(0); }
+      50% { transform:scale(1.4); }
+      100% { transform:scale(1); }
+    }
+
+  </style>
 </head>
 <body>
 
-    <div id="app">
-        <div id="loading-screen" class="overlay-screen">
-            <div class="heart-icon">❤️</div>
-            <p id="loading-msg">Connecting to our memories...</p>
-        </div>
+<!-- WELCOME -->
+<div id="welcome">
+  <h1>Our Private World ❤️</h1>
+  <iframe id="welcomeVideo"></iframe>
+  <label>
+    <input type="checkbox" id="videoCheck"> I’ve watched it 💕
+  </label>
+  <br/><br/>
+  <button class="btn-romantic" onclick="enterApp()">Enter</button>
+</div>
 
-        <div id="login-screen" class="overlay-screen hidden">
-            <h1 style="margin-bottom: 10px;">Verify</h1>
-            <p style="color: #888; margin-bottom: 30px;">Enter the secret passcode</p>
-            <input type="password" id="passcode-input" placeholder="Passcode (e.g. 2017)">
-            <button id="login-btn">Unlock</button>
-        </div>
+<!-- MAIN APP -->
+<div id="app" class="hidden">
 
-        <div id="main-content" class="hidden">
-            <div class="glass" style="padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0; font-size: 1.1rem;">Valentine's Progress</h2>
-                <div id="progress-text" style="font-size: 0.8rem; opacity: 0.7;">0 tasks complete</div>
-            </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('romantic',this)">Romantic</div>
+    <div class="tab" onclick="unlockNaughty(this)">Naughty</div>
+  </div>
 
-            <div class="jar-container">
-                <div class="heart-jar">
-                    <div id="jar-liquid" class="jar-liquid" style="height: 0%"></div>
-                </div>
-            </div>
+  <div id="romantic" class="section romantic"></div>
+  <div id="naughty" class="section naughty hidden"></div>
 
-            <div class="interaction-grid" id="interaction-grid"></div>
-        </div>
+</div>
+
+<div id="modalContainer" class="hidden"></div>
+<div id="reward" class="reward hidden">💖</div>
+
+<audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b0b8a.mp3"></audio>
+<audio id="successSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3"></audio>
+
+<script>
+
+let settings = {
+  naughtyCode:"1234",
+  welcomeVideoLink:"https://drive.google.com/file/d/1NNv05Q7CYbwwxIuZOgx_qBoP10QqIRXF/preview"
+};
+
+let tasks = {
+  romantic:[
+    {title:"Whisper something sweet 💌",answer:"love",hints:["4 letters","It’s a feeling"]}
+  ],
+  naughty:[
+    {title:"Say the magic word 😈",answer:"please",hints:["6 letters","Polite and powerful"]}
+  ]
+};
+
+function play(id){ document.getElementById(id).play(); }
+
+function enterApp(){
+  if(!document.getElementById('videoCheck').checked) return;
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  renderTasks();
+}
+
+function showTab(tab,el){
+  play('clickSound');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('romantic').classList.add('hidden');
+  document.getElementById('naughty').classList.add('hidden');
+  document.getElementById(tab).classList.remove('hidden');
+}
+
+function unlockNaughty(el){
+  let code=prompt("Enter secret code 😈");
+  if(code===settings.naughtyCode){
+    showTab('naughty',el);
+  } else alert("Wrong code...");
+}
+
+function renderTasks(){
+  for(let section in tasks){
+    const container=document.getElementById(section);
+    container.innerHTML="";
+    tasks[section].forEach(task=>{
+      const card=document.createElement('div');
+      card.className="task-card glass";
+      card.innerText=task.title;
+      card.onclick=()=>openTask(task);
+      container.appendChild(card);
+    });
+  }
+}
+
+function openTask(task){
+  play('clickSound');
+  document.getElementById('modalContainer').innerHTML=`
+  <div class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal glass">
+      <button class="close-btn" onclick="closeModal()">✕</button>
+      <h3>${task.title}</h3>
+      <input id="taskAnswer" placeholder="Your answer"/>
+      <button class="btn-romantic" onclick="checkAnswer('${task.answer}')">Submit</button>
+      <p id="hintText"></p>
+      <button onclick="showHint(${JSON.stringify(task.hints).replace(/"/g,'&quot;')})">Hint</button>
     </div>
+  </div>`;
+  document.getElementById('modalContainer').classList.remove('hidden');
+}
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+let hintIndex=0;
+function showHint(hints){
+  if(hintIndex<hints.length){
+    document.getElementById('hintText').innerText=hints[hintIndex];
+    hintIndex++;
+  }
+}
 
-        // Firebase Configuration provided by user
-        const firebaseConfig = {
-            apiKey: "AIzaSyAf3nUe7taCcOLOzc2Rf4taBsMfI2-sFG0",
-            authDomain: "valentines-16b75.firebaseapp.com",
-            projectId: "valentines-16b75",
-            storageBucket: "valentines-16b75.firebasestorage.app",
-            messagingSenderId: "874081783784",
-            appId: "1:874081783784:web:366560e5c9010996e9de5d",
-            measurementId: "G-JKK5Q1GY4X"
-        };
+function checkAnswer(correct){
+  let val=document.getElementById('taskAnswer').value.toLowerCase();
+  if(val===correct){
+    play('successSound');
+    document.getElementById('reward').classList.remove('hidden');
+    setTimeout(()=>document.getElementById('reward').classList.add('hidden'),1000);
+    closeModal();
+  }
+}
 
-        async function init() {
-            const loadingMsg = document.getElementById('loading-msg');
-            
-            try {
-                // Initialize Firebase
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                const db = getFirestore(app);
-                
-                // Get environment appId or fallback
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'valentines-app-prod';
+function closeModal(e){
+  if(e && e.target!==e.currentTarget) return;
+  document.getElementById('modalContainer').classList.add('hidden');
+  hintIndex=0;
+}
 
-                // Handle Auth (Rule 3)
-                const initAuth = async () => {
-                    // Try custom token if available, but wrap in try-catch to handle custom-token-mismatch
-                    // which occurs when the token belongs to a different project than the config.
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } catch (e) {
-                            console.warn("Custom token mismatch or invalid, falling back to anonymous auth.");
-                            await signInAnonymously(auth);
-                        }
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                };
+function spawn(type,emoji,interval){
+  const container=document.getElementById(type);
+  setInterval(()=>{
+    const el=document.createElement('div');
+    el.className='float';
+    el.style.left=Math.random()*100+'vw';
+    el.textContent=emoji;
+    container.appendChild(el);
+    setTimeout(()=>el.remove(),8000);
+  },interval);
+}
 
-                await initAuth();
+spawn('romantic','❤️',600);
+spawn('naughty','😈',700);
 
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        startApp(db, appId);
-                    }
-                });
+document.getElementById('welcomeVideo').src=settings.welcomeVideoLink;
 
-            } catch (err) {
-                console.error("Initialization Error:", err);
-                loadingMsg.style.color = "#ff2e63";
-                loadingMsg.innerText = `Connection Failed. Check your network.`;
-            }
-        }
+</script>
 
-        function startApp(db, appId) {
-            // Rule 1: Fixed Path Segments (Even number)
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'state', 'vday-state');
-
-            onSnapshot(docRef, (snap) => {
-                document.getElementById('loading-screen').classList.add('hidden');
-                
-                let data = snap.exists() ? snap.data() : getDefaultData();
-                
-                if (!snap.exists()) {
-                    setDoc(docRef, data);
-                }
-
-                renderUI(data, docRef);
-            }, (err) => {
-                console.error("Firestore Snapshot Error:", err);
-            });
-
-            checkLock();
-        }
-
-        function checkLock() {
-            if (!sessionStorage.getItem('unlocked')) {
-                document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('login-btn').onclick = () => {
-                    const pass = document.getElementById('passcode-input').value;
-                    // Check against passcode
-                    if (pass === "2017") {
-                        sessionStorage.setItem('unlocked', 'true');
-                        document.getElementById('login-screen').classList.add('hidden');
-                        document.getElementById('main-content').classList.remove('hidden');
-                    } else {
-                        const btn = document.getElementById('login-btn');
-                        btn.innerText = "Try Again ❤️";
-                        setTimeout(() => btn.innerText = "Unlock", 2000);
-                    }
-                };
-            } else {
-                document.getElementById('main-content').classList.remove('hidden');
-            }
-        }
-
-        function renderUI(data, docRef) {
-            const grid = document.getElementById('interaction-grid');
-            grid.innerHTML = '';
-            
-            let completedCount = 0;
-            data.tasks.forEach((task, index) => {
-                if (task.completed) completedCount++;
-                
-                const card = document.createElement('div');
-                card.className = `task-trigger glass ${task.completed ? 'completed' : ''}`;
-                
-                // Logic: Only the current task or completed tasks are fully visible
-                const isPreviousCompleted = index === 0 || data.tasks[index - 1].completed;
-                card.style.opacity = isPreviousCompleted ? '1' : '0.3';
-                card.style.cursor = isPreviousCompleted ? 'pointer' : 'not-allowed';
-
-                card.innerHTML = `
-                    <small style="color: var(--primary); font-weight: bold; font-size: 0.7rem;">${task.time}</small>
-                    <div style="font-weight: 600; margin-top: 5px; font-size: 0.9rem;">${task.title}</div>
-                    ${task.completed ? '<div style="font-size: 0.7rem; margin-top: 8px; color: #ff8ca6;">✅ Completed</div>' : ''}
-                `;
-
-                card.onclick = () => {
-                    if (!isPreviousCompleted) return;
-                    
-                    if (task.completed) {
-                        showModal(`Reward: ${task.reward}`);
-                    } else {
-                        if (confirm(`Mark "${task.title}" as complete?`)) {
-                            const newTasks = [...data.tasks];
-                            newTasks[index].completed = true;
-                            updateDoc(docRef, { tasks: newTasks });
-                        }
-                    }
-                };
-                grid.appendChild(card);
-            });
-
-            const pct = (completedCount / data.tasks.length) * 100;
-            document.getElementById('jar-liquid').style.height = `${pct}%`;
-            document.getElementById('progress-text').innerText = `${completedCount} of ${data.tasks.length} done`;
-        }
-
-        function showModal(msg) {
-            // Simple replacement for alert()
-            const div = document.createElement('div');
-            div.className = 'overlay-screen';
-            div.style.background = 'rgba(0,0,0,0.85)';
-            div.innerHTML = `
-                <div class="glass" style="padding: 30px; max-width: 80%; text-align: center;">
-                    <p style="font-size: 1.1rem; line-height: 1.5;">${msg}</p>
-                    <button id="close-modal" style="margin-top: 20px;">Sweet!</button>
-                </div>
-            `;
-            document.body.appendChild(div);
-            document.getElementById('close-modal').onclick = () => div.remove();
-        }
-
-        function getDefaultData() {
-            return {
-                tasks: [
-                    { time: "09:00 AM", title: "Morning Surprise", completed: false, reward: "A secret note hidden in your bag!" },
-                    { time: "12:30 PM", title: "Lunch Date", completed: false, reward: "The reservations are at your favorite spot!" },
-                    { time: "05:00 PM", title: "Sunset Walk", completed: false, reward: "I have a tiny gift for this moment." },
-                    { time: "08:00 PM", title: "Valentine's Dinner", completed: false, reward: "A toast to many more years together ❤️" }
-                ]
-            };
-        }
-
-        window.onload = init;
-    </script>
 </body>
 </html>
